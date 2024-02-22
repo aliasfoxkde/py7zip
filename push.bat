@@ -1,7 +1,6 @@
 @echo off
 REM Simple script for Auto-Committing Latest Repo Changes (could be scheduled)
-REM In the future, this may be moved to Python, where flags can be also be used 
-REM cross-platform
+REM This may be moved to Python, where flags can be also be used cross-platform.
 
 REM Pipeline Improvements:
 REM - Consider using AI to create commit message based on list of changes,
@@ -21,6 +20,8 @@ REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, publish changes to PyPi project.
 REM python setup.py sdist bdist_wheel  # build package
 REM twine upload -u api -p %PYPI_API_KEY% dist/*
+
+REM Cleanup build and distribution directories
 
 REM Write metadata of repository details to JSON file
 
