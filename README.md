@@ -11,6 +11,7 @@ the intent to be used in code and scripts, not through the terminal.
 
 ## Features
 - Simplified "point-in-time" backups and full/incremental schemas using snapshots
+- Simplifies lessor known features of 7zip. Such as full, differential, incremental backups, etc.
 - Comprehensive documentation through online wiki pages (using standard markdown).
 - Cross platform support for Windows, Linux, and Mac.
 - Native "Pythonic" logic removes need for additional libraries or CLI executing.
