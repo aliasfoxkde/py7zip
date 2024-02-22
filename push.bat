@@ -1,5 +1,7 @@
 @echo off
 REM Simple script for Auto-Committing Latest Repo Changes (could be scheduled)
+REM In the future, this may be moved to Python, where flags can be also be used 
+REM cross-platform
 
 REM Pipeline Improvements:
 REM - Consider using AI to create commit message based on list of changes,
@@ -9,6 +11,12 @@ for /f %%A in ('git rev-parse --short HEAD') do set "commit_hash=%%A"
 
 set "commit_message=Auto-commit changes #%commit_hash%"
 set "custom_message="
+
+REM Check current version of repository against Pip/PyPi
+REM If repo version is higher, publish changes to PyPi project.
+REM python setup.py sdist bdist_wheel
+
+REM Write metadata of repository details to JSON file
 
 REM Loop through command line arguments
 :parse_args

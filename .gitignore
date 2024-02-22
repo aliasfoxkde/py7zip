@@ -1,0 +1,29 @@
+# Extensions to exclude
+*.old
+*.bak
+*.lock
+*.log
+*.pyc
+*.code-workspace
+~
+~$
+
+# Folders to exclude
+*.old/
+*.bak/
+__pycache__/
+_archived/
+.backup/
+.backups/
+.vscode/
+.idea/
+_Archive/
+archive/
+archived/
+backup/
+backups/
+build/
+dist/
+logs/
+testing/
+temp/
