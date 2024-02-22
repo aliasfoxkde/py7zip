@@ -2,16 +2,27 @@ import os
 import re
 from setuptools import setup
 
-__name__ = 'py7za'
+__name__ = 'py7zip'
 
 project_urls = {
-    'Home page': 'https://pypi.org/project/py7za',
-    'Source Code': 'https://gitlab.com/Jaap.vanderVelde/py7za',
-    'Documentation': 'https://py7za.readthedocs.io/'
+    'Home page': 'https://pypi.org/project/py7zip',
+    'Source Code': 'https://github.com/aliasfoxkde/py7zip',
+    'Documentation': 'https://py7zip.cyopsys.com/docs'
 }
 
-version_fn = os.path.join(__name__, "_version.py")
-__version__ = "unknown"
+with open('docs/CHANGELOG.md', 'r') as changelog_file:
+    changelog_content = changelog_file.read()
+
+# Search for version in the format: "- X.X.X"
+version_match = re.search(r'- (\d+\.\d+\.\d+)', changelog_content)
+
+if version_match:
+    print(f"Latest version found in CHANGELOG.md: {latest_version}")
+    __version__ = version_match.group(1)
+else:
+    print("Failed to retrieve the latest version from CHANGELOG.md")
+    __version__ = "unknown"
+
 try:
     version_line = open(version_fn, "rt").read()
 except EnvironmentError:
@@ -29,37 +40,39 @@ with open("README.md", "r") as rm:
     long_description = rm.read()
 
 setup(
-    name="py7za",
-    packages=['py7za'],
+    name="py7zip",
+    packages=['py7zip'],
     version=__version__,
     license='MIT',
-    author="BMT, Jaap van der Velde",
-    author_email="jaap.vandervelde@bmtglobal.com",
+    author="Aliasfoxkde",
+    author_email="aliasfoxkde@gmail.com",
     description="Description",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://gitlab.com/Jaap.vanderVelde/py7za',
-    download_url='https://gitlab.com/Jaap.vanderVelde/py7za/repository/archive.zip?ref='+__version__,
+    url='https://github.com/aliasfoxkde/py7zip',
+    download_url='https://github.com/aliasfoxkde/py7zip/repository/archive.zip?ref='+__version__,
     keywords=['package'],
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 2 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     extras_require={
-        'box': ['conffu'],
-        'dev': ['mkdocs']
     },
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [
-            'py7za-box=py7za.py7za_box:cli_entry_point',
-            'box=py7za.py7za_box:cli_box_entry_point',
-            'unbox=py7za.py7za_box:cli_unbox_entry_point',
+            'py7zip=py7za.py7za:extract',
         ],
     },
     include_package_data=True,
-    package_data={'': ['bin/7za.exe', 'bin/7za-license.txt', 'bin/GNU_LGPL.txt']},
+    package_data={'': [
+        'bin/7za', 
+        'README.md', 
+        'docs/CHANGELOG.md', 
+        'docs/LICENSE.md', 
+        'docs/PLANNING.md', 
+        'USAGE.md']},
 )
