@@ -4,7 +4,7 @@ from setuptools import setup
 
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
-__description__ = "An unofficial, cross-platform, lightweight, and easy-to-use port of 7zip command-line binaries (7za) for Python."
+__description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) for Python. "
 
 project_urls = {
     'Home page': f'https://pypi.org/project/{__name__}',
