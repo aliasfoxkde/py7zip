@@ -5,8 +5,6 @@ the intent to be used in code and scripts, not through the terminal. Additionall
 directly as the specific binaries for your system will be installed automatically and you can therefor use '7za' 
 direcly from the terminal/cli/cmd). This also lends to making cross platform apps using this module.
 
-[repo-url]: https://github.com/aliasfoxkde/py7zip/blob/main/docs
-
 ## Why Choose py7zip?
 - **Seamless Integration**: Unlike other libraries, py7zip seamlessly integrates 7zip functionality directly into Python, 
   eliminating the need for external dependencies or cumbersome command-line executions.
@@ -30,11 +28,11 @@ direcly from the terminal/cli/cmd). This also lends to making cross platform app
 - `pip install git+https://github.com/aliasfoxkde/py7zip.git`
 
 ### Documentation
-- [**FEATURES.md**](repo-url/FEATURES.md): reference documentation that details the features of this module as well as 7zip.
-- [**USAGE.md**](repo-url/USAGE.md): includes detailed instructions on how to use this module.
-- [**PLANNING.md**](repo-url/PLANNING.md): includes Tasks, Improvements, and General planning stages.
-- [**CHANGELOG.md**](repo-url/CHANGELOG.md): includes versioning and a list of changes made between them.
-- [**LICENSE.md**](repo-url/LICENSE.md): includes all licensing information for use of this module.
+- [**FEATURES.md**](https://github.com/aliasfoxkde/py7zip/tree/main/docs/FEATURES.md): reference documentation that details the features of this module as well as 7zip.
+- [**USAGE.md**](https://github.com/aliasfoxkde/py7zip/tree/main/docs/USAGE.md): includes detailed instructions on how to use this module.
+- [**PLANNING.md**](https://github.com/aliasfoxkde/py7zip/tree/main/docs/PLANNING.md): includes Tasks, Improvements, and General planning stages.
+- [**CHANGELOG.md**](https://github.com/aliasfoxkde/py7zip/tree/main/docs/CHANGELOG.md): includes versioning and a list of changes made between them.
+- [**LICENSE.md**](https://github.com/aliasfoxkde/py7zip/tree/main/docs/LICENSE.md): includes all licensing information for use of this module.
 - **NOTE**: Documentation is broken down into parts and can be found in ./docs
 
 ## Platforms Supported and Tested:
