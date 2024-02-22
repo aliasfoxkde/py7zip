@@ -1,7 +1,8 @@
 ## CHANGELOG
-- 0.4.1 - Minor Bug Fixes
+- 0.4.2 - Minor Bug Fixes
   - Worked on pipeline changes (aka. "Push")
   - Updated setup.py to reflect updates
+  - Formatting bug caused invalid link
 
 - 0.4.0 - Module Testing & Published to PyPi
   - Added FEATURE.md file and update docs & structure

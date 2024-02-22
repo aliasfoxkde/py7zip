@@ -11,7 +11,7 @@ __version__ = get_version()
 project_urls = {
     'Home page': f'https://pypi.org/project/{__name__}',
     'Source Code': f'https://github.com/{__author__}/{__name__}',
-    'Documentation': 'https://github.com/{__author__}/{__name__}/blob/main/docs/',
+    'Documentation': f'https://github.com/{__author__}/{__name__}/blob/main/docs/',
 }
 
 with open("README.md", "r") as rm:
