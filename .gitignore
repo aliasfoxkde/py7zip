@@ -27,3 +27,6 @@ dist/
 logs/
 testing/
 temp/
+
+# Other
+*.egg-info/
