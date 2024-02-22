@@ -17,8 +17,6 @@ direcly from the terminal/cli/cmd). This also lends to making cross platform app
 - **Lightweight and Efficient**: Despite its robust feature set, py7zip remains remarkably lightweight, occupying less 
   than 1MB of disk space.
 
-
-
 ## Usage
 ### Install using Pip/PyPi (Default; most common)
 - `pip install py7zip`

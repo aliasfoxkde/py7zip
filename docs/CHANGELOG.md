@@ -1,4 +1,11 @@
 ## CHANGELOG
+- 0.4.0 - Module Testing & Published to PyPi
+  - Added FEATURE.md file and update docs & structure
+  - Added general.py module for development and pipeline.
+  - Updated setup.py and py7zip.py scripts.
+  - Finished testing & fine tuning of setup
+  - Published wheels to PyPi (will add auto-action later)
+
 - 0.3.0 - Deployment Testing & PyPi Prep
   - Improved setup.py, setup.cfg, and the like
   - Cloned the deployment and tested installing it.
