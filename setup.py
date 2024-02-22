@@ -17,11 +17,12 @@ with open('docs/CHANGELOG.md', 'r') as changelog_file:
 version_match = re.search(r'- (\d+\.\d+\.\d+)', changelog_content)
 
 if version_match:
+    latest_version = version_match.group(1)
+    __version__ = latest_version
     print(f"Latest version found in CHANGELOG.md: {latest_version}")
-    __version__ = version_match.group(1)
 else:
-    print("Failed to retrieve the latest version from CHANGELOG.md")
     __version__ = "unknown"
+    print("Failed to retrieve the latest version from CHANGELOG.md")
 
 try:
     version_line = open(version_fn, "rt").read()
