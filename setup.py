@@ -5,7 +5,7 @@ from py7zip.general import get_version
 
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
-__description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) for Python. "
+__description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. "
 __version__ = get_version()
 
 project_urls = {
@@ -47,10 +47,6 @@ setup(
     include_package_data=True,
     package_data={'': [
         'bin/7za', 
-        'README.md', 
-        'docs/CHANGELOG.md', 
-        'docs/LICENSE.md', 
-        'docs/PLANNING.md', 
-        'docs/USAGE.md'
+        'README.md'
     ]},
 )

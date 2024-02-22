@@ -15,14 +15,22 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ### Infrastructure
 - Create online repository/webpage to store ~8 possible CLI platform versions of '7za' and reference docs.
+- Add action (through github or 'push' script) to update PyPi project on version change.
 
 ### Documentation
+- Include github page in README (for PyPi).
+- Consider moving all features (7zip and Project) to FEATURES.md doc.
+- Make path the documentation use URL of Repo (so it works everywhere).
 - Create Initial USAGE.md document.
 - Add navigation to all docs.
 
 ### Future Scope
 - Build Unit, Sanity, Performance, etc. Tests
 - Add language support
+
+### Bugs
+- Links are broken on PyPi Project Page: https://pypi.org/project/py7zip/
+  and without reference to GitHub repository directly.
 
 ### Testing
 - One-to-one comparision between 7za and this python package.
