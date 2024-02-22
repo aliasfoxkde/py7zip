@@ -22,10 +22,10 @@ the intent to be used in code and scripts, not through the terminal.
 ### Install using Pip/PyPi (Default; most common)
 - `pip install py7zip`
 
-### Install using Git
+### Install using Git Clone
 - Browse to the location to install and open terminal/cmd
 - `git clone https://github.com/aliasfoxkde/py7zip.git`
-- `python setup.py .`
+- `pip install .`
 
 ### Install Using Pip+Git (Alternative)
 - `pip install git+https://github.com/aliasfoxkde/py7zip.git`
