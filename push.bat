@@ -12,11 +12,15 @@ for /f %%A in ('git rev-parse --short HEAD') do set "commit_hash=%%A"
 set "commit_message=Auto-commit changes #%commit_hash%"
 set "custom_message="
 
+REM Setup/Prepare Instructions (only done once)
+REM Login to PyPi and create an API key
+REM Create an environment variable called PYPI_API_KEY
+REM pip install twine  # if it doesn't exist
+
 REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, publish changes to PyPi project.
 REM python setup.py sdist bdist_wheel  # build package
-REM pip install twine  # if it doesn't exist
-REM twine upload dist/*
+REM twine upload -u api -p %PYPI_API_KEY% dist/*
 
 REM Write metadata of repository details to JSON file
 

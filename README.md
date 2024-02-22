@@ -2,8 +2,8 @@
 An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. 
 Unlike other libraries, this one fully supports 7zip natively, is easy to setup/install, and is "pythonic" with 
 the intent to be used in code and scripts, not through the terminal. Additionally, you CAN use the '7za' binaries
-directly as the specific binaries for your system will be installed automatically and you can therefor use '7za' 
-direcly from the terminal/cli/cmd). This also lends to making cross platform apps using this module.
+directly as the specific binaries for your system will be installed automatically and you can therefor it from the 
+terminal/commandline (cli/cmd). This also lends to making cross platform apps using this module.
 
 ## Why Choose py7zip?
 - **Seamless Integration**: Unlike other libraries, py7zip seamlessly integrates 7zip functionality directly into Python, 
