@@ -1,10 +1,12 @@
 import os
 import re
 from setuptools import setup
+from py7zip.general import get_version
 
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
 __description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) for Python. "
+__version__ = get_version()
 
 project_urls = {
     'Home page': f'https://pypi.org/project/{__name__}',
@@ -12,20 +14,9 @@ project_urls = {
     'Documentation': f'https://{__name__}.cyopsys.com/docs',
 }
 
-# Search for version in the format: "- X.X.X"
-with open('docs/CHANGELOG.md', 'r') as changelog_file:
-    version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
-
-if version_match:
-    __version__ = version_match.group(1)
-    print(f"Latest version found in CHANGELOG.md: {__version__}")
-else:
-    __version__ = "0.0.0"
-    print("Failed to retrieve the latest version from CHANGELOG.md")
-
 with open("README.md", "r") as rm:
     long_description = rm.read()
-
+    
 setup(
     name=__name__,
     packages=[__name__],

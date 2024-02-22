@@ -6,8 +6,8 @@ import sys
 
 
 class Py7zip:
-    """An unofficial, cross-platform, lightweight, and easy-to-use port
-       of 7zip command-line binaries (7za) for Python."""
+    """ An unofficial, cross-platform, lightweight, and easy-to-use wrapper
+        for 7zip command-line binaries (7za) for Python. """
 
     def __init__(self):
         self.platform = platform.system().lower()
