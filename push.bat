@@ -14,7 +14,9 @@ set "custom_message="
 
 REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, publish changes to PyPi project.
-REM python setup.py sdist bdist_wheel
+REM python setup.py sdist bdist_wheel  # build package
+REM pip install twine  # if it doesn't exist
+REM twine upload dist/*
 
 REM Write metadata of repository details to JSON file
 
