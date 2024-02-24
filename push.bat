@@ -65,6 +65,7 @@ if %pypi_version% == %changelog_version% (
 		echo Publishing Package to PyPi...
 		python setup.py sdist bdist_wheel
 		twine upload -u api -p %PYPI_API_KEY% dist/*
+		TIMEOUT 5
 	)
 )
 
