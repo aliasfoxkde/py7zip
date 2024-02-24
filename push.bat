@@ -23,7 +23,23 @@ for /f "tokens=2 delims=- " %%v in ('type docs\CHANGELOG.md ^| findstr /b /c:"- 
 
 REM :compare_versions
 REM Check if PYPI_API_KEY is set
+if not "%PYPI_API_KEY%" == "" (
+    for /f "tokens=2 delims==" %%p in ('pip show py7zip ^| findstr /c:"Version"') do (
+        set "pypi_version=%%p"
+    )
+	pause
 
+    REM Compare versions
+    if "%changelog_version%" GTR "%pypi_version%" (
+        echo Repository version (%changelog_version%) is higher than PyPi version (%pypi_version%). Publishing to PyPi...
+        python setup.py sdist bdist_wheel  REM Build package
+        twine upload -u api -p %PYPI_API_KEY% dist/*
+    ) else (
+        echo Repository version (%changelog_version%) is not higher than PyPi version (%pypi_version%). Skipping PyPi publishing.
+    )
+) else (
+    echo PYPI_API_KEY environment variable is not set. Skipping PyPi publishing.
+)
 pause
 
 REM Cleanup build and distribution directories
