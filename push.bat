@@ -2,7 +2,7 @@
 @title=AutoCommit Changes to Git
 REM Simple script for Auto-Committing Latest Repo Changes (could be scheduled)
 
-REM Pipeline Improvements:
+REM Improvements:
 REM - Consider using AI to create commit message based on list of changes,
 REM   and increment repository versioning, etc.
 REM - Move logic to Python, where flags can be also be used cross-platform.
@@ -49,9 +49,10 @@ if %pypi_version% GTR %pip_version% (
 )
 
 REM Debugging
-echo %pip_version%
-echo %pypi_version%
-echo %changelog_version%
+REM echo %pip_version%
+REM echo %pypi_version%
+REM echo %changelog_version%
+REM pause
 
 REM Checks PyPi version to Repo/CHANGELOG version
 if %pypi_version% == %changelog_version% (
@@ -72,7 +73,7 @@ echo Cleaning up build and distribution directories...
 if exist build\ (
 	rmdir /s /q build
 	rmdir /s /q dist
-	rmdir /s /q *.egg-info
+	rmdir /s /q %app_name%.egg-info
 )
 :skip_version_check
 
