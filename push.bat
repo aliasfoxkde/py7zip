@@ -17,7 +17,7 @@ REM Create an environment variable called PYPI_API_KEY
 REM pip install twine  # if it doesn't exist
 
 REM Check current version of repository against Pip/PyPi
-REM If repo version is higher, publish changes to PyPi project.
+REM If repo version is higher, and API Key Set, publish changes to PyPi project.
 REM python setup.py sdist bdist_wheel  # build package
 REM twine upload -u api -p %PYPI_API_KEY% dist/*
 
