@@ -1,5 +1,5 @@
 @echo off
-setlocal
+@title=AutoCommit Changes to GIT
 REM Simple script for Auto-Committing Latest Repo Changes (could be scheduled)
 REM This may be moved to Python, where flags can be also be used cross-platform.
 
@@ -19,58 +19,54 @@ set "pip_version="
 REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, and API Key Set, publish changes to PyPi project.
 
-REM if not "%PYPI_API_KEY%" == "" (
+if not "%PYPI_API_KEY%" == "" (
+	goto skip_version_check
+)
 REM Extract version from CHANGELOG.md
 for /f "delims=- " %%v in ('type docs\CHANGELOG.md ^| findstr /b /c:"- "') do (
-    set "changelog_version=%%v"
-    goto :break
+	set "changelog_version=%%v"
+	goto :break
 )
 :break
 
 REM Retrieve version from PyPi
 for /f %%v in ('curl -s https://pypi.org/pypi/py7zip/json ^| jq -r ".info.version"') do (
-    set "pypi_version=%%v"
+	set "pypi_version=%%v"
 )
 
 REM Checks current module version
-REM for /f "delims=-" %%p in ('pip show %app_name% ^| find /i "Version" ') do (
 for /f "tokens=2 delims=: " %%v in ('pip show %app_name% ^| findstr /c:"Version"') do (
-    set "pip_version=%%v"
+	set "pip_version=%%v"
 )
-
-REM echo %pip_version%
-REM echo %pypi_version%
-REM echo %changelog_version%
 
 REM Checks local pip version to PyPi version and if older, updates it (optional)
 if "%pypi_version%" GTR "%pip_version%" (
-    pip install -U %app_name%
-    pip install -U twine
+	pip install -U %app_name%
+	pip install -U twine
 )
 
 REM Checks PyPi version to Repo/CHANGELOG version
 if %pypi_version% == %changelog_version% (
-    echo PyPi and Repo version ^(%pypi_version%^) are the same. Skipping PyPi publishing.
+	echo PyPi and Repo version ^(%pypi_version%^) are the same. Skipping PyPi publishing.
 ) else (
 	if %pypi_version% GTR %changelog_version% (
-        echo Pip Version is Newer! There must be an issue with the repo, please check.
-    ) else (
-        echo Repository version ^(%changelog_version%^) is higher than PyPi version ^(%pypi_version%^). 
-        echo Publishing Package to PyPi...
-        python setup.py sdist bdist_wheel
-        twine upload -u api -p %PYPI_API_KEY% dist/*
-    )
+		echo Pip Version is Newer! There must be an issue with the repo, please check.
+	) else (
+		echo Repository version ^(%changelog_version%^) is higher than PyPi version ^(%pypi_version%^). 
+		echo Publishing Package to PyPi...
+		python setup.py sdist bdist_wheel
+		twine upload -u api -p %PYPI_API_KEY% dist/*
+	)
 )
 
 REM Cleanup build and distribution directories
 echo Cleaning up build and distribution directories...
 if exist build\ (
-    rmdir /s /q build
-    rmdir /s /q dist
-    rmdir /s /q *.egg-info
+	rmdir /s /q build
+	rmdir /s /q dist
+	rmdir /s /q *.egg-info
 )
-
-REM Write metadata of repository details to JSON file
+:skip_version_check
 
 REM Loop through command line arguments
 :parse_args
@@ -97,5 +93,3 @@ echo.
 echo Auto-Commit Hash: %commit_hash%
 echo Changes have been committed, script will exit in 5 seconds...
 TIMEOUT 5
-
-:end
