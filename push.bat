@@ -1,11 +1,11 @@
 @echo off
-@title=AutoCommit Changes to GIT
+@title=AutoCommit Changes to Git
 REM Simple script for Auto-Committing Latest Repo Changes (could be scheduled)
-REM This may be moved to Python, where flags can be also be used cross-platform.
 
 REM Pipeline Improvements:
 REM - Consider using AI to create commit message based on list of changes,
 REM   and increment repository versioning, etc.
+REM - Move logic to Python, where flags can be also be used cross-platform.
 
 for /f %%A in ('git rev-parse --short HEAD') do set "commit_hash=%%A"
 
@@ -22,15 +22,18 @@ REM If repo version is higher, and API Key Set, publish changes to PyPi project.
 if not "%PYPI_API_KEY%" == "" (
 	goto skip_version_check
 )
+
 REM Extract version from CHANGELOG.md
 for /f "delims=- " %%v in ('type docs\CHANGELOG.md ^| findstr /b /c:"- "') do (
 	set "changelog_version=%%v"
+	
+	REM Breaks out of loop on first match
 	goto :break
 )
 :break
 
 REM Retrieve version from PyPi
-for /f %%v in ('curl -s https://pypi.org/pypi/py7zip/json ^| jq -r ".info.version"') do (
+for /f %%v in ('curl -s https://pypi.org/pypi/%app_name%/json ^| jq -r ".info.version"') do (
 	set "pypi_version=%%v"
 )
 
@@ -50,7 +53,7 @@ if %pypi_version% == %changelog_version% (
 	echo PyPi and Repo version ^(%pypi_version%^) are the same. Skipping PyPi publishing.
 ) else (
 	if %pypi_version% GTR %changelog_version% (
-		echo Pip Version is Newer! There must be an issue with the repo, please check.
+		echo PyPi Version is Newer! There must be an issue with the repo or CHANGELOG, please check.
 	) else (
 		echo Repository version ^(%changelog_version%^) is higher than PyPi version ^(%pypi_version%^). 
 		echo Publishing Package to PyPi...

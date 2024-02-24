@@ -1,4 +1,14 @@
 ## CHANGELOG
+- 0.5.0 - Improved Pipeline and Workflow
+  - Updated 'push.bat' script to automatically update Pip package, publish PyPi package on version change, etc.
+  - Infastructure
+    - Setup workflow, pipeline and documentation
+  - Documentation
+    - Include github page in README (for PyPi).
+    - Consider moving all features (7zip and Project) to FEATURES.md doc.
+    - Make path the documentation use URL of Repo (so it works everywhere).
+    - Create Initial USAGE.md document.
+
 - 0.4.2 - Minor Bug Fixes
   - Worked on pipeline changes (aka. "Push")
   - Updated setup.py to reflect updates

@@ -6,7 +6,10 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ### CODE
 - Detecting hardware, determine Platform, and archetecture and download appropriate 7za CLI version (dynamically)
+- Download and setup cloud storage for binaries by platform (system and archetecture).
 - Add platform check and support for Windows, Linux, and Mac.
+- After initial testing and development, move general library to main
+- Add custom parameters, flags and functions to simplify usage of 7za libs.
 - Build out and test initial functionality:
   - [ ] Compress
   - [ ] Decompress
@@ -18,13 +21,9 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 - Add action (through github or 'push' script) to update PyPi project on version change.
 
 ### Documentation
-- Include github page in README (for PyPi).
-- Consider moving all features (7zip and Project) to FEATURES.md doc.
-- Make path the documentation use URL of Repo (so it works everywhere).
 - Improve markdown documentation for Wiki, PyPi, GitHub, etc.
   - Use images, add references, and formatted tables
   - Use ```pycon ``` and ```shell ``` tags
-- Create Initial USAGE.md document.
 - Add navigation to all docs.
 
 ### Future Scope
@@ -38,4 +37,5 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ### Testing
 - One-to-one comparision between 7za and this python package.
+- Test the tool in production code (other projects requiring 'zip') and refactor as needed.
 - Development Testing (ongoing)

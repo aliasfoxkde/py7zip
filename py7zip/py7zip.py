@@ -39,6 +39,8 @@ class Py7zip:
 
         return platform_urls[self.platform]
 
+    def snapshot(self, src, dst, options=''): pass
+        
     def extract(self, src, dst, options=''):
         command = f'"{self.binary_path}" x "{src}" -o"{dst}" {options}'
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
@@ -49,6 +51,10 @@ class Py7zip:
             print(f"Failed to extract archive from {src} to {dst}. Error: {result.stderr}")
 
     def backup(self, src, dst, options=''):
+        def full(self, src, dst, options=''): pass
+        def incremental(self, src, dst, options=''): pass
+        def differential(self, src, dst, options=''): pass
+        
         command = f'"{self.binary_path}" a "{dst}" "{src}" {options}'
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         print(result.stdout)
