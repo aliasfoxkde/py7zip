@@ -8,29 +8,21 @@ REM   and increment repository versioning, etc.
 
 for /f %%A in ('git rev-parse --short HEAD') do set "commit_hash=%%A"
 
-set "app_name=py7zip"
 set "commit_message=Auto-commit changes #%commit_hash%"
 set "custom_message="
 
+REM Setup/Prepare Instructions (only done once)
+REM Login to PyPi and create an API key
+REM Create an environment variable called PYPI_API_KEY
+REM pip install twine  # if it doesn't exist
+
 REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, and API Key Set, publish changes to PyPi project.
-
-REM Extract version from CHANGELOG.md
-for /f "tokens=2 delims=- " %%v in ('type docs\CHANGELOG.md ^| findstr /b /c:"- "') do (
-    set "changelog_version=%%v"
-    REM goto compare_versions
-)
-
-REM :compare_versions
-REM Check if PYPI_API_KEY is set
-
-pause
+REM python setup.py sdist bdist_wheel  # build package
+REM twine upload -u api -p %PYPI_API_KEY% dist/*
 
 REM Cleanup build and distribution directories
-echo Cleaning up build and distribution directories...
-if exist build rmdir /s /q build
-if exist dist rmdir /s /q dist
-if exist py7zip.egg-info rmdir /s /q py7zip.egg-info
+REM Remove: build, dist, py7zip.egg-info
 
 REM Write metadata of repository details to JSON file
 
