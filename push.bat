@@ -43,10 +43,15 @@ for /f "tokens=2 delims=: " %%v in ('pip show %app_name% ^| findstr /c:"Version"
 )
 
 REM Checks local pip version to PyPi version and if older, updates it (optional)
-if "%pypi_version%" GTR "%pip_version%" (
+if %pypi_version% GTR %pip_version% (
 	pip install -U %app_name%
 	pip install -U twine
 )
+
+REM Debugging
+echo %pip_version%
+echo %pypi_version%
+echo %changelog_version%
 
 REM Checks PyPi version to Repo/CHANGELOG version
 if %pypi_version% == %changelog_version% (
