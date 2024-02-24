@@ -19,7 +19,7 @@ set "pip_version="
 REM Check current version of repository against Pip/PyPi
 REM If repo version is higher, and API Key Set, publish changes to PyPi project.
 
-if not "%PYPI_API_KEY%" == "" (
+if "%PYPI_API_KEY%" == "" (
 	goto skip_version_check
 )
 
