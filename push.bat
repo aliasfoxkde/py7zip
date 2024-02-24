@@ -22,6 +22,7 @@ REM python setup.py sdist bdist_wheel  # build package
 REM twine upload -u api -p %PYPI_API_KEY% dist/*
 
 REM Cleanup build and distribution directories
+REM Remove: build, dist, py7zip.egg-info
 
 REM Write metadata of repository details to JSON file
 

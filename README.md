@@ -28,11 +28,16 @@ terminal/command line. This also lends to making cross platform apps using this 
 - `pip install git+https://github.com/aliasfoxkde/py7zip.git`
 
 ### Documentation
-- [**FEATURES.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/FEATURES.md): reference documentation that details the features of this module as well as 7zip.
-- [**USAGE.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/USAGE.md): includes detailed instructions on how to use this module.
-- [**PLANNING.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/PLANNING.md): includes Tasks, Improvements, and General planning stages.
-- [**CHANGELOG.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/CHANGELOG.md): includes versioning and a list of changes made between them.
-- [**LICENSE.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/LICENSE.md): includes all licensing information for use of this module.
+- [**FEATURES.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/FEATURES.md): reference documentation that 
+  details the features of this module as well as 7zip.
+- [**USAGE.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/USAGE.md): includes detailed instructions on 
+  how to use this module.
+- [**PLANNING.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/PLANNING.md): includes Tasks, Improvements, 
+  and General planning stages.
+- [**CHANGELOG.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/CHANGELOG.md): includes versioning and a 
+  list of changes made between them.
+- [**LICENSE.md**](https://github.com/aliasfoxkde/py7zip/blob/main/docs/LICENSE.md): includes all licensing 
+  information for use of this module.
 - **NOTE**: Documentation is broken down into parts and can be found in ./docs
 
 ## Platforms Supported and Tested:

@@ -9,9 +9,10 @@ __description__ = "An unofficial, cross platform, lightweight, and easy to use w
 __version__ = get_version()
 
 project_urls = {
-    'Home page': f'https://pypi.org/project/{__name__}',
+    'Homepage': f'https://pypi.org/project/{__name__}',
     'Source Code': f'https://github.com/{__author__}/{__name__}',
     'Documentation': f'https://github.com/{__author__}/{__name__}/blob/main/README.md',
+    'Project Page': f'https://{__name__}.cyopsys.com'
 }
 
 with open("README.md", "r") as rm:

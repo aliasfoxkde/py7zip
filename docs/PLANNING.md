@@ -21,11 +21,15 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 - Include github page in README (for PyPi).
 - Consider moving all features (7zip and Project) to FEATURES.md doc.
 - Make path the documentation use URL of Repo (so it works everywhere).
+- Improve markdown documentation for Wiki, PyPi, GitHub, etc.
+  - Use images, add references, and formatted tables
+  - Use ```pycon ``` and ```shell ``` tags
 - Create Initial USAGE.md document.
 - Add navigation to all docs.
 
 ### Future Scope
 - Build Unit, Sanity, Performance, etc. Tests
+- Benchmark & document issues of different Python compression libraries.
 - Add language support
 
 ### Bugs
