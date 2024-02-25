@@ -39,5 +39,8 @@ manually if needed.
 	twine upload -u api -p %PYPI_API_KEY% dist/*
 ```
 
+### Get py7zip Versions
+- `pip show py7zip`
+
 ## Versioning
 Versioning changes are based on {Major}.{Minor}.{Bug}.

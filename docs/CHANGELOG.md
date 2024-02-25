@@ -1,10 +1,19 @@
 ## CHANGELOG
+- 0.6.2 - Debugging
+  - Resolved various issues with wrapper
+  - Tested 7za wrapper for Windows x64 platform
+  - Refactored compress/decompress logic into wrapper call
+    and created aliases for "backup", "archive", and "extract"
+  - Put in various placeholders for future logic.
+  - Updated "setup.py" and created entry_point script
+  - Added "debugging.py" script to tests.
+
 - 0.6.0 - Implimented Platform Binaries
   - Built directory tree for platform binaries (initial, requires testing)
   - Created 'img' folder to organize and store images (graphics, icons, etc)
   - Created INFO.md file for 'bin' folder with reference details
   - Basic Testing of py7zip wrapper function and logic
-  - Updated py7zip library and logic  
+  - Updated py7zip library and logic
 
 - 0.5.0 - Improved Pipeline and Workflow
   - Updated 'push.bat' script to automatically update Pip package, publish PyPi package on version change, etc.

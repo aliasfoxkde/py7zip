@@ -45,9 +45,13 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
     ],
     python_requires='>=3',
+    entry_points={
+        'console_scripts': [
+            'py7zip-setup = py7zip.py7zip:setup'
+        ]
+    },
     include_package_data=True,
     package_data={'': [
-        'bin/7za', 
         'README.md'
     ]},
 )
