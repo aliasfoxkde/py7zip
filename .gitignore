@@ -12,12 +12,12 @@
 *.old/
 *.bak/
 __pycache__/
-_archived/
 .backup/
 .backups/
 .vscode/
 .idea/
 _Archive/
+_Archived/
 archive/
 archived/
 backup/

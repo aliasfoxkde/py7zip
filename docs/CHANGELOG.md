@@ -1,4 +1,11 @@
 ## CHANGELOG
+- 0.6.0 - Implimented Platform Binaries
+  - Built directory tree for platform binaries (initial, requires testing)
+  - Created 'img' folder to organize and store images (graphics, icons, etc)
+  - Created INFO.md file for 'bin' folder with reference details
+  - Basic Testing of py7zip wrapper function and logic
+  - Updated py7zip library and logic  
+
 - 0.5.0 - Improved Pipeline and Workflow
   - Updated 'push.bat' script to automatically update Pip package, publish PyPi package on version change, etc.
   - Infastructure
