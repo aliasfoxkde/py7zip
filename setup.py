@@ -1,7 +1,9 @@
 import os
 import re
 from setuptools import setup
+from setuptools.command.install import install
 from py7zip.general import get_version
+from py7zip import py7zip
 
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
@@ -17,7 +19,10 @@ project_urls = {
 
 with open("README.md", "r") as rm:
     long_description = rm.read()
-    
+
+def install():
+    py7zip.Py7zip()
+   
 setup(
     name=__name__,
     packages=[__name__],
@@ -49,6 +54,9 @@ setup(
         'console_scripts': [
             'py7zip-setup = py7zip.py7zip:setup'
         ]
+    },
+    cmdclass={
+        'install': install(),
     },
     include_package_data=True,
     package_data={'': [

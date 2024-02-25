@@ -37,10 +37,14 @@ for /f %%v in ('curl -s https://pypi.org/pypi/%app_name%/json ^| jq -r ".info.ve
 	set "pypi_version=%%v"
 )
 
-REM Checks current module version
+REM Retrieve the version of the installed package
 for /f "tokens=2 delims=: " %%v in ('pip show %app_name% ^| findstr /c:"Version"') do (
-	set "pip_version=%%v"
+    set "pip_version=%%v"
 )
+if "%errorlevel%" neq "0" (
+    set "pip_version=0.0.0"
+)
+:end
 
 REM Checks local pip version to PyPi version and if older, updates it (optional)
 if %pypi_version% GTR %pip_version% (
