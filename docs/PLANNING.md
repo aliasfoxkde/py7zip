@@ -3,6 +3,7 @@ This document is intended to plan out steps, tasks, and features of this module.
 Implimented tasks and changes are moved to the CHANGELOG as new versions are commited.
 
 ## Tasks
+- Add and test github actions to automate building wheel and updating PyPi package
 - Add simplified functions for various commands (full, incremental, differential, snapshot)
 - Setup GitHub Wiki in Repo (include navigation, header and footers; update HOME.md)
 - Refactor py7zip library to be more straight forward.
@@ -14,9 +15,9 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 ### Improvements
 - Add Localizations/Language support
 - Create wrapper to allow standard commands to be passed through 7za binary,
-  which extends functionality without adding complexity (if not desired)
+  which extends functionality without adding complexity (if not desired; WIP)
 - Need to compile/build binaries for Mac for 'arm' and 'pc' binaries (to replace generic one).
-- After initial testing and development, move general library to main
+- After initial testing and development, move general library to main (py7zip class)?
 - Add custom parameters, flags, and functions to simplify usage and features of 7za libs.
 - Add auto-commit logic and flags to setup.py file (or dedicated "push.py" file)
 - Replace batch files with cross-platform equivilant python scripts
@@ -43,7 +44,8 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ### Bugs
 - "Project Page" Link on PyPi site is broken and needs to be setup.
-- Fix GitHub actions not automatically updating PyPi package (appears action & keys were deleted?)
+- Fix GitHub actions not automatically updating PyPi package (action/keys deleted?)
+- Fix Python package version check error (package.__version__ returns AttributeError)
 
 ### Testing
 - Test whether "aliases" or direct methods perform better (or neglegable difference)

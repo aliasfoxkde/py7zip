@@ -1,8 +1,10 @@
+import os
 import re
 
 def get_version(verbose=False):
     # Search for version in the format: "- X.X.X"
-    with open('docs/CHANGELOG.md', 'r') as changelog_file:
+    changelog_path = os.path.join('..', 'docs', 'CHANGELOG.md')
+    with open(changelog_path, 'r') as changelog_file:
         version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
 
     if version_match:

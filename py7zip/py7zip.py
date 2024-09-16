@@ -3,6 +3,7 @@ import platform
 import os
 import urllib.request
 import sys
+from general import get_version
 
 
 class Py7zip:
@@ -11,6 +12,8 @@ class Py7zip:
 
     def __init__(self, verbose=False, debug=False):
         """ Initializes the class and variables. """
+        self.__version__ = get_version()
+        
         self.verbose = verbose
         self.debug = debug
 
@@ -22,6 +25,7 @@ class Py7zip:
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
         self.debug_info = platform.uname()
 
+        # Move platform check to dedicated function
         if platform.machine() in ['AMD64', 'x86_64']:
             self.sys_type = 'pc'
         elif 'arm' in platform.machine():
