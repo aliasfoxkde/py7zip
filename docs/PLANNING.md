@@ -4,6 +4,7 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ## Tasks
 - Add simplified functions for various commands (full, incremental, differential, snapshot)
+- Setup GitHub Wiki in Repo (include navigation, header and footers; update HOME.md)
 - Refactor py7zip library to be more straight forward.
 - Improve docstrings to include "usage", etc.
 - Add declarators to handle pass-through logic to 7za (make more dynamic)
@@ -42,6 +43,7 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 
 ### Bugs
 - "Project Page" Link on PyPi site is broken and needs to be setup.
+- Fix GitHub actions not automatically updating PyPi package (appears action & keys were deleted?)
 
 ### Testing
 - Test whether "aliases" or direct methods perform better (or neglegable difference)
