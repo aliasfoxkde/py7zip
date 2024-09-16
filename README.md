@@ -2,8 +2,8 @@
 An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. 
 Unlike other libraries, this one fully supports 7zip natively, is easy to setup/install, and is "pythonic" with 
 the intent to be used in code and scripts, not through the terminal. Additionally, you CAN use the '7za' binaries
-directly as the specific binaries for your system will be installed automatically and you can therefor it from the 
-terminal/command line. This also lends to making cross platform apps using this module.
+directly as the specific binaries for your system will be installed automatically and you can therefor use it from
+the terminal/command line as you normally would. This also lends to making cross platform apps using this module.
 
 ## Why Choose py7zip?
 - **Seamless Integration**: Unlike other libraries, py7zip seamlessly integrates 7zip functionality directly into Python, 
@@ -13,9 +13,12 @@ terminal/command line. This also lends to making cross platform apps using this 
 - **Pythonic Design**: With a focus on adhering to Python's idiomatic principles, py7zip boasts an intuitive API that is 
   easy to understand and use within your codebase.
 - **Lightweight and Efficient**: Despite its robust feature set, py7zip remains remarkably lightweight, occupying less 
-  than 1MB of disk space.
+  than a few megabytes of disk space (and only specifically for the detected system).
+- **Licensing**: This Python Module's MIT License is compatible with the "7-Zip" License and can be "used" without 
+  restriction, including for commercial purposes (see LICENSE.md).
 
-## Usage
+## Installation
+
 ### Install using Pip/PyPi (Default; most common)
 - `pip install py7zip`
 
@@ -49,6 +52,15 @@ terminal/command line. This also lends to making cross platform apps using this 
 - [ ] Linux arm64 (64-bit)
 - [ ] Linux arm (32-bit)
 - [ ] macOS (arm64 / x86-64)
-- [ ] Windows x64 (64-bit)
+- [x] Windows x64 (64-bit)
 - [ ] Windows x86 (32-bit )
 - [ ] Windows arm64 (64-bit)
+
+### Notes
+- If you install this package using `git clone`, then all binary packages will be included. 
+  This is not the case when using `pip install` as only the binary for the given system is 
+  included; this allows for managing the various binaries easy through git versioning.
+- Please also keep in mind, unless you are planning on bundling this module with your own
+  custom package, or want to contribute to the project there is little other reason to use 
+  git to install it, because your python environement will not be able to locate it and 
+  pathing will not be inherited.

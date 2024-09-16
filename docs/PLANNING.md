@@ -3,14 +3,21 @@ This document is intended to plan out steps, tasks, and features of this module.
 Implimented tasks and changes are moved to the CHANGELOG as new versions are commited.
 
 ## Tasks
+- Add simplified functions for various commands (full, incremental, differential, snapshot)
+- Refactor py7zip library to be more straight forward.
+- Improve docstrings to include "usage", etc.
+- Add declarators to handle pass-through logic to 7za (make more dynamic)
+- Complete general python library and test
+- Ongoing cleanup
 
-### CODE
-- Download and setup cloud storage for binaries by platform (system and archetecture).
-- Detecting hardware, determine Platform, and archetecture and download appropriate 7za CLI version (dynamically)
-- Add platform checks and support for Windows, Linux, and Mac.
+### Improvements
+- Create wrapper to allow standard commands to be passed through 7za binary,
+  which extends functionality without adding complexity (if not desired)
+- Need to compile/build binaries for Mac for 'arm' and 'pc' binaries (to replace generic one).
 - After initial testing and development, move general library to main
 - Add custom parameters, flags, and functions to simplify usage and features of 7za libs.
 - Add auto-commit logic and flags to setup.py file (or dedicated "push.py" file)
+- Replace batch files with cross-platform equivilant python scripts
 - Replace 'CURL', 'Findstr' for more cross platform (python) and compatible options
 - Dynamically load metadata from JSON or config files for setting parameters
 - Build out and test initial functionality:
@@ -19,12 +26,9 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
   - [ ] Snapshot
   - [ ] Backup
 
-### Infrastructure
-- Create online repository/webpage to store ~8 possible CLI platform versions of '7za' and reference docs.
-- Add action (through github or 'push' script) to update PyPi project on version change.
-
 ### Documentation
 - Create graphics (logo, icon, info), charts, benchmarks, and the like for docs
+- Create extensive documentation for repo (7za docs, usage, etc)
 - Improve markdown documentation for Wiki, PyPi, GitHub, etc.
   - Use images, add references, and formatted tables
   - Use ```pycon ``` and ```shell ``` tags
@@ -36,10 +40,10 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 - Add language support
 
 ### Bugs
-- Links are broken on PyPi Project Page: https://pypi.org/project/py7zip/
-  and without reference to GitHub repository directly.
+- "Project Page" Link is broken and needs to be setup.
 
 ### Testing
+- Test whether "aliases" or direct methods perform better (or neglegable difference)
 - One-to-one comparision between 7za and this python package.
 - Test the tool in production code (other projects requiring 'zip') and refactor as needed.
 - Is using CURL on Windows reliable across versions (or consider using different method)

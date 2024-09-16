@@ -1,4 +1,16 @@
 ## CHANGELOG
+- 0.7.2 - Functional Improvements
+  - Updated platform check to account for additional cases
+  - Setup cloud storage for binaries by platform (system and archetecture).
+  - Added support for detecting hardware, determine Platform, and archetecture and download 
+    the appropriate 7za CLI version (dynamically)
+  - Added platform checks and support for Windows, Linux, and Mac.
+  - Added crossplatform binaries (CLI) versions of '7za' to github repository
+  - Added action (through github or 'push' script) to update PyPi project on version change.
+  - Tested py7zip and 7za library on Linux (Ubunutu through Windows Subsystem for Linux (WSL))
+  - Resolved: Links are broken on PyPi Project Page: https://pypi.org/project/py7zip/
+    and without reference to GitHub repository directly.
+
 - 0.6.2 - Debugging
   - Resolved various issues with wrapper
   - Tested 7za wrapper for Windows x64 platform
@@ -17,9 +29,8 @@
 
 - 0.5.0 - Improved Pipeline and Workflow
   - Updated 'push.bat' script to automatically update Pip package, publish PyPi package on version change, etc.
-  - Infastructure
-    - Setup workflow, pipeline and documentation
-  - Documentation
+  - Infastructure: Setup workflow, pipeline and documentation
+  - Documentation:
     - Include github page in README (for PyPi).
     - Consider moving all features (7zip and Project) to FEATURES.md doc.
     - Make path the documentation use URL of Repo (so it works everywhere).
@@ -50,7 +61,7 @@
   - Updated Documentation.
 
 - 0.1.0 - Initial Commit
-  - Empty repo with base README created.
+  - Empty repo with base README.md created.
   - Initial planning and scope created.
   - PyPi package references created.
   - Versioing: Major.Minor.Bug

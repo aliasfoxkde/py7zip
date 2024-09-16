@@ -22,7 +22,7 @@ class Py7zip:
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
         self.debug_info = platform.uname()
 
-        if 'AMD64' in platform.machine():
+        if platform.machine() in ['AMD64', 'x86_64']:
             self.sys_type = 'pc'
         elif 'arm' in platform.machine():
             self.sys_type = 'arm'
