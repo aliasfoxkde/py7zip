@@ -31,3 +31,4 @@ temp/
 # Other
 *.egg-info/
 *7za*
+*.zip
