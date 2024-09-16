@@ -1,4 +1,4 @@
-# Features
+# FEATURES
 Reference documentation that details the features of this module as well as 7zip.
 
 ## Py7zip
@@ -8,7 +8,7 @@ Reference documentation that details the features of this module as well as 7zip
 - Cross platform support for Windows, Linux, and Mac.
 - Native "Pythonic" logic removes need for additional libraries or CLI executing.
 - Uses '7za' compiled library for compatability, Performance, and Reliability.
-- Lightweight, being under 1mb in size.
+- Lightweight, being under a few megabytes in size (varies by platform).
 
 ## 7-zip Features (Source: https://www.7-zip.org):
 - **License**: "You can use 7-Zip on any computer, including a computer in a commercial organization. 
@@ -24,8 +24,5 @@ Reference documentation that details the features of this module as well as 7zip
   PKZip and WinZip
 - Strong AES-256 encryption in 7z and ZIP formats
 - Self-extracting capability for 7z format
-- Integration with Windows Shell
-- Powerful File Manager
 - Powerful command line version
-- Plugin for FAR Manager
-- Localizations for 87 languages
+- Localizations for 87 languages  (not currently implimented)

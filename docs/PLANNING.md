@@ -11,6 +11,7 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 - Ongoing cleanup
 
 ### Improvements
+- Add Localizations/Language support
 - Create wrapper to allow standard commands to be passed through 7za binary,
   which extends functionality without adding complexity (if not desired)
 - Need to compile/build binaries for Mac for 'arm' and 'pc' binaries (to replace generic one).
@@ -40,7 +41,7 @@ Implimented tasks and changes are moved to the CHANGELOG as new versions are com
 - Add language support
 
 ### Bugs
-- "Project Page" Link is broken and needs to be setup.
+- "Project Page" Link on PyPi site is broken and needs to be setup.
 
 ### Testing
 - Test whether "aliases" or direct methods perform better (or neglegable difference)
