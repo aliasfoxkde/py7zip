@@ -35,6 +35,10 @@ jobs:
         pip install build
         pip install setuptools
         pip install requests
+        
+    - name: Verify requests installation
+      run: |
+        python -m pip show requests
 
     - name: Get latest version from CHANGELOG.md
       id: changelog_version
