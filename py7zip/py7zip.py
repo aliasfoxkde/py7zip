@@ -1,10 +1,9 @@
 import os
-import sys
 import re
-import urllib.request
 import requests
 import subprocess
 import platform
+import urllib.request
 
 
 class Py7zip:
@@ -13,8 +12,6 @@ class Py7zip:
 
     def __init__(self, verbose=False, debug=False):
         """ Initializes the class and variables. """
-        self.__version__ = self.get_version()
-        
         self.verbose = verbose
         self.debug = debug
 
@@ -40,11 +37,12 @@ class Py7zip:
         self.extension = {'windows': '.exe', 'linux': '', 'darwin': ''}[self.platform]
         self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
         self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
+        self.__version__ = self.get_version()
         self.setup()
-    
+
     def get_version(self, verbose=False):
-        """Construct the URL to fetch CHANGELOG.md and finds the version number."""
-        changelog_url = f"https://raw.githubusercontent.com/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
+        """Construct the URL to fetch CHANGELOG.md and find the version number."""
+        changelog_url = f"{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
         
         try:
             # Fetch the content of the CHANGELOG.md file from the URL
@@ -68,23 +66,6 @@ class Py7zip:
             if verbose:
                 print(f"Error fetching CHANGELOG.md: {e}")
         
-        return version
-    
-    def get_version_old(self, verbose=False):
-        """Search for version in the format: "- X.X.X" """
-        changelog_file = "{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
-        changelog_path = os.path.join('docs', 'CHANGELOG.md')
-        with open(changelog_path, 'r') as changelog_file:
-            version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
-
-        if version_match:
-            version = version_match.group(1)
-            if verbose:
-                print(f"Latest version found in CHANGELOG.md: {version}")
-        else:
-            version = "0.0.0"
-            if verbose:
-                print("Failed to retrieve the latest version from CHANGELOG.md")
         return version
 
     def setup(self):
@@ -121,7 +102,7 @@ class Py7zip:
             command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
             success_msg = f"Backup created from '{src}' to '{dst}'."
             error_msg = f"Failed to extract archive from '{src}' to '{dst}'."
-        else:  # "compress" method as default
+        else:  # "decompress" method as default
             command = f'"7za{self.extension}" x "{src}" -o"{dst}" {options}'
             success_msg = f"Extracted archive from '{src}' to '{dst}'"
             error_msg = f"Failed to create backup from '{src}' to '{dst}'."
@@ -143,7 +124,7 @@ class Py7zip:
         self.wrapper(src, dst, options='', method="decompress")
 
     def extract(self, src, dst, options=''):
-        """ Alias used for 'compress' method. """
+        """ Alias used for 'decompress' method. """
         self.wrapper(src, dst, options='', method="decompress")
 
     def compress(self, src, dst, options=''):
@@ -151,11 +132,11 @@ class Py7zip:
         self.wrapper(src, dst, options='', method="compress")
 
     def archive(self, src, dst, options=''):
-        """ Alias used for decompress method. """
+        """ Alias used for compress method. """
         self.wrapper(src, dst, options='', method="compress")
 
     def backup(self, src, dst, options=''):
-        """ Alias used for decompress method. """
+        """ Alias used for compress method. """
         self.wrapper(src, dst, options='', method="compress")
 
     def full(self, src, dst, options=''): pass
