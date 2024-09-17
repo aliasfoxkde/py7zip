@@ -1,5 +1,5 @@
 ## CHANGELOG
-- 0.7.0 - Functional Improvements
+- 0.7.1 - Functional Improvements
   - Updated platform check to account for additional cases
   - Setup cloud storage for binaries by platform (system and archetecture).
   - Added support for detecting hardware, determine Platform, and archetecture and download 
