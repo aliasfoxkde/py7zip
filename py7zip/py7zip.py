@@ -3,7 +3,6 @@ import platform
 import os
 import urllib.request
 import sys
-from general import get_version
 
 
 class Py7zip:
@@ -23,6 +22,7 @@ class Py7zip:
         self.username = 'aliasfoxkde'
         self.app_name = 'py7zip'
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
+        self.changelog_path = os.path.join('..', 'docs', 'CHANGELOG.md')
         self.debug_info = platform.uname()
 
         # Move platform check to dedicated function
@@ -39,6 +39,21 @@ class Py7zip:
         self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
         self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
         self.setup()
+        
+    def get_version(self, verbose=False):
+        """Search for version in the format: "- X.X.X" """
+        with open(self.changelog_path, 'r') as changelog_file:
+            version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
+
+        if version_match:
+            version = version_match.group(1)
+            if verbose:
+                print(f"Latest version found in CHANGELOG.md: {version}")
+        else:
+            version = "0.0.0"
+            if verbose:
+                print("Failed to retrieve the latest version from CHANGELOG.md")
+        return version
 
     def setup(self):
         """ Checks the system for prerequisites and performs the required steps. """
