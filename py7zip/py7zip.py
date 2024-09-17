@@ -11,7 +11,7 @@ class Py7zip:
 
     def __init__(self, verbose=False, debug=False):
         """ Initializes the class and variables. """
-        self.__version__ = get_version()
+        self.__version__ = self.get_version()
         
         self.verbose = verbose
         self.debug = debug
