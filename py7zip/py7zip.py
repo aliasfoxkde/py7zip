@@ -57,7 +57,6 @@ class Py7zip:
                 print("Failed to retrieve the latest version from CHANGELOG.md")
         return version
 
-
     def setup(self):
         """ Checks the system for prerequisites and performs the required steps. """
         try:
