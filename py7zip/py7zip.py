@@ -23,7 +23,7 @@ class Py7zip:
         self.username = 'aliasfoxkde'
         self.app_name = 'py7zip'
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
-        self.changelog_path = os.path.join('..', 'docs', 'CHANGELOG.md')
+        self.changelog_path = os.path.join('docs', 'CHANGELOG.md')
         self.debug_info = platform.uname()
 
         # Move platform check to dedicated function
