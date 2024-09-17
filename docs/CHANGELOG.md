@@ -1,5 +1,5 @@
 ## CHANGELOG
-- 0.7.2 - Functional Improvements
+- 0.7.4 - Functional Improvements
   - Updated platform check to account for additional cases
   - Setup cloud storage for binaries by platform (system and archetecture).
   - Added support for detecting hardware, determine Platform, and archetecture and download 
@@ -11,6 +11,7 @@
   - Resolved: Links are broken on PyPi Project Page: https://pypi.org/project/py7zip/
     and without reference to GitHub repository directly.
   - Resolved: Publishing bug in YML causing actions to fail.
+  - Fixed various bugs.
 
 - 0.6.2 - Debugging
   - Resolved various issues with wrapper
