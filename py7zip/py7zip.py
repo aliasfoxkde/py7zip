@@ -23,7 +23,6 @@ class Py7zip:
         self.username = 'aliasfoxkde'
         self.app_name = 'py7zip'
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
-        self.changelog_path = os.path.join('docs', 'CHANGELOG.md')
         self.debug_info = platform.uname()
 
         # Move platform check to dedicated function
@@ -41,10 +40,11 @@ class Py7zip:
         self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
         self.setup()
         
-    def get_version(self, verbose=False):
+    @staticmethod
+    def get_version(verbose=False):
         """Search for version in the format: "- X.X.X" """
-        
-        with open(self.changelog_path, 'r') as changelog_file:
+        changelog_path = os.path.join('docs', 'CHANGELOG.md')
+        with open(changelog_path, 'r') as changelog_file:
             version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
 
         if version_match:
