@@ -26,6 +26,10 @@ setup(
     name=__name__,
     packages=[__name__],
     version=__version__,
+    install_requires=[
+        'requests',
+        # other dependencies
+    ],
     license='MIT',
     author=__author__,
     author_email=f"{__author__}@gmail.com",

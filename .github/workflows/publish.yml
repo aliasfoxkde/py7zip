@@ -36,8 +36,10 @@ jobs:
         pip install setuptools
         pip install requests
         
-    - name: Verify requests installation
+    - name: Verify dependencies are installed
       run: |
+        python -m pip show build
+        python -m pip show setuptools
         python -m pip show requests
 
     - name: Get latest version from CHANGELOG.md
