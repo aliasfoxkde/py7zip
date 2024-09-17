@@ -28,7 +28,6 @@ setup(
     version=__version__,
     install_requires=[
         'requests',
-        # other dependencies
     ],
     license='MIT',
     author=__author__,
