@@ -1,8 +1,9 @@
+import os
+import sys
+import re
+import urllib.request
 import subprocess
 import platform
-import os
-import urllib.request
-import sys
 
 
 class Py7zip:
@@ -42,6 +43,7 @@ class Py7zip:
         
     def get_version(self, verbose=False):
         """Search for version in the format: "- X.X.X" """
+        
         with open(self.changelog_path, 'r') as changelog_file:
             version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
 
@@ -54,6 +56,7 @@ class Py7zip:
             if verbose:
                 print("Failed to retrieve the latest version from CHANGELOG.md")
         return version
+
 
     def setup(self):
         """ Checks the system for prerequisites and performs the required steps. """
