@@ -7,7 +7,7 @@ from py7zip import py7zip
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
 __description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. "
-__version__ = py7zip.get_version()
+__version__ = py7zip.Py7zip().get_version()
 
 project_urls = {
     'Homepage': f'https://pypi.org/project/{__name__}',
