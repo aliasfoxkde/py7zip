@@ -41,9 +41,10 @@ class Py7zip:
         self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
         self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
         self.setup()
+    
     def get_version(self, verbose=False):
         """Construct the URL to fetch CHANGELOG.md and finds the version number."""
-        changelog_url = f"{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
+        changelog_url = f"https://raw.githubusercontent.com/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
         
         try:
             # Fetch the content of the CHANGELOG.md file from the URL
