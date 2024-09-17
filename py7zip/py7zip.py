@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import urllib.request
+import requests
 import subprocess
 import platform
 
@@ -23,6 +24,7 @@ class Py7zip:
         self.username = 'aliasfoxkde'
         self.app_name = 'py7zip'
         self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
+        self.raw_usercontent = "https://raw.githubusercontent.com"
         self.debug_info = platform.uname()
 
         # Move platform check to dedicated function
@@ -39,10 +41,37 @@ class Py7zip:
         self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
         self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
         self.setup()
+    def get_version(self, verbose=False):
+        """Construct the URL to fetch CHANGELOG.md and finds the version number."""
+        changelog_url = f"{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
         
-    @staticmethod
-    def get_version(verbose=False):
+        try:
+            # Fetch the content of the CHANGELOG.md file from the URL
+            response = requests.get(changelog_url)
+            response.raise_for_status()  # Raise an error for bad responses
+            changelog_content = response.text
+            
+            # Search for the version in the content
+            version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_content, re.MULTILINE)
+            
+            if version_match:
+                version = version_match.group(1)
+                if verbose:
+                    print(f"Latest version found in CHANGELOG.md: {version}")
+            else:
+                version = "0.0.0"
+                if verbose:
+                    print("Failed to retrieve the latest version from CHANGELOG.md")
+        except requests.RequestException as e:
+            version = "0.0.0"
+            if verbose:
+                print(f"Error fetching CHANGELOG.md: {e}")
+        
+        return version
+    
+    def get_version_old(self, verbose=False):
         """Search for version in the format: "- X.X.X" """
+        changelog_file = "{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
         changelog_path = os.path.join('docs', 'CHANGELOG.md')
         with open(changelog_path, 'r') as changelog_file:
             version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_file.read(), re.MULTILINE)
