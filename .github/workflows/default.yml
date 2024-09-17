@@ -17,12 +17,11 @@ permissions:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python
+    - name: Set up Python 3.x
       uses: actions/setup-python@v3
       with:
         python-version: '3.x'
@@ -37,3 +36,5 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
+        repository_url: https://pypi.org/project/py7zip
+        skip_existing: false
