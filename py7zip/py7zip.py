@@ -4,6 +4,7 @@ import requests
 import subprocess
 import platform
 import urllib.request
+import shutil
 
 
 class Py7zip:
@@ -36,7 +37,7 @@ class Py7zip:
         self.sys_platform = {'windows': 'win', 'linux': 'lin', 'darwin': 'mac'}[self.platform]
         self.extension = {'windows': '.exe', 'linux': '', 'darwin': ''}[self.platform]
         self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
-        self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
+        self.binary_path = self._find_local_7zip()
         self.__version__ = self.get_version()
         self.setup()
 
@@ -96,19 +97,51 @@ class Py7zip:
             raise NotImplementedError(f"Platform '{self.platform}' is not supported.")
         return self.url
 
+    def _find_local_7zip(self):
+        """Search for a local 7zip installation in PATH and common directories."""
+        # 1. Check system PATH
+        for name in ['7za', '7z']:
+            path = shutil.which(name)
+            if path:
+                return path
+
+        # 2. Check common installation directories
+        search_dirs = []
+        binaries = ['7za', '7z']
+        if self.platform == 'windows':
+            pf = os.environ.get('ProgramFiles', r'C:\Program Files')
+            pf86 = os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)')
+            search_dirs = [os.path.join(pf, '7-Zip'), os.path.join(pf86, '7-Zip')]
+            binaries = ['7za.exe', '7z.exe']
+        elif self.platform in ['linux', 'darwin']:
+            search_dirs = ['/usr/bin', '/usr/local/bin', '/opt/homebrew/bin']
+
+        for d in search_dirs:
+            if os.path.isdir(d):
+                for b in binaries:
+                    full_path = os.path.join(d, b)
+                    if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+                        return full_path
+
+        # 3. Fallback to bundled path
+        return os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
+
     def wrapper(self, src, dst, options='', method="decompress"):
         """ Method used to extract an archive. """
         if method == "compress":
-            command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
+            cmd = [self.binary_path, "a", dst, src]
             success_msg = f"Backup created from '{src}' to '{dst}'."
             error_msg = f"Failed to extract archive from '{src}' to '{dst}'."
         else:  # "decompress" method as default
-            command = f'"7za{self.extension}" x "{src}" -o"{dst}" {options}'
+            cmd = [self.binary_path, "x", src, f"-o{dst}"]
             success_msg = f"Extracted archive from '{src}' to '{dst}'"
             error_msg = f"Failed to create backup from '{src}' to '{dst}'."
 
+        if options:
+            cmd.extend(options.split())
+
         try:
-            result = subprocess.run(command, capture_output=True, text=True, shell=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if self.debug:
                 print(result.stdout)
             if self.verbose:
