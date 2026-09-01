@@ -1,3 +1,9 @@
 [build-system]
 requires = ["setuptools>=40.8.0", "wheel", "requests"]
 build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+filterwarnings = ["error"]
