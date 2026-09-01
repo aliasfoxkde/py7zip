@@ -157,7 +157,8 @@ class Py7zip:
         """Method used to extract an archive."""
         if not self.legacy:
             operation = "compress" if method == "compress" else "decompress"
-            result = self._safe.run(operation, src, dst, options)
+            safe_options = () if options == "" else options
+            result = self._safe.run(operation, src, dst, safe_options)
             if self.debug and result.stdout:
                 print(result.stdout)
             return result
