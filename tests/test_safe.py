@@ -11,7 +11,9 @@ from py7zip.safe import (
     ArchiveExecutionError,
     ArchiveRunner,
     ArchiveTimeoutError,
+    ArchiveTraversalError,
     SafePy7zip,
+    validate_archive_members,
 )
 
 
@@ -29,7 +31,6 @@ def test_runner_passes_an_argument_vector_without_shell(monkeypatch, tmp_path):
         return Completed()
 
     monkeypatch.setattr(safe_module.subprocess, "run", fake_run)
-    result = ArchiveRunner(tmp_path / "7za", timeout=12).decompress if False else None
     result = ArchiveRunner(tmp_path / "7za", timeout=12).run(
         "decompress", "source;touch", "out dir", ["-y", "m0=on;touch"]
     )
@@ -79,3 +80,22 @@ def test_safe_construction_does_not_acquire_or_execute(tmp_path, monkeypatch):
 
     assert safe.binary_path is None
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "member",
+    [
+        "../outside.txt",
+        "/tmp/outside",
+        "C:/outside.txt",
+        "a/../../outside.txt",
+        "a\\..\\..\\outside.txt",
+    ],
+)
+def test_archive_member_validation_rejects_escape(member, tmp_path):
+    with pytest.raises(ArchiveTraversalError, match="unsafe archive member"):
+        validate_archive_members([member], tmp_path / "output")
+
+
+def test_archive_member_validation_accepts_nested_relative_paths(tmp_path):
+    validate_archive_members(["input/data.txt", "input/nested/"], tmp_path / "output")
