@@ -1,68 +1,37 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Upload and Publish Python Package to PYPI
+name: Publish Python package
 
 on:
-  push:
-    paths:
-      - 'docs/CHANGELOG.md'
+  release:
+    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
-  deploy:
+  publish:
+    name: Build and publish release
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out the repository
-      uses: actions/checkout@v4
-
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-        pip install setuptools
-        pip install requests
-        
-    - name: Verify dependencies are installed
-      run: |
-        python -m pip show build
-        python -m pip show setuptools
-        python -m pip show requests
-
-    - name: Get latest version from CHANGELOG.md
-      id: changelog_version
-      run: |
-        VERSION=$(grep -Eo "^\-\s*([0-9]+\.[0-9]+\.[0-9]+)" docs/CHANGELOG.md | head -1 | awk '{print $2}')
-        echo "version=$VERSION" >> $GITHUB_ENV
-
-    - name: Check if version is updated
-      run: |
-        CURRENT_VERSION=$(python setup.py --version)
-        if [ "$CURRENT_VERSION" == "$VERSION" ]; then
-          echo "Version is unchanged. Skipping deployment."
-          exit 0
-        else
-          echo "New version detected: $VERSION"
-        fi
-
-    - name: Build package
-      run: python -m build
-
-    - name: Publish package to PyPI
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build distribution
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check dist/*
+      - name: Verify release tag matches package version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=$(python -c 'import pathlib, re; text=pathlib.Path("pyproject.toml").read_text(); print(re.search(r"^version = \"([^\"]+)\"$", text, re.MULTILINE).group(1))')
+          test "v$VERSION" = "$RELEASE_TAG" || test "$VERSION" = "$RELEASE_TAG"
+      - name: Publish to PyPI with trusted publishing
+        if: github.event_name == 'release'
+        uses: pypa/gh-action-pypi-publish@release/v1
