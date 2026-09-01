@@ -7,16 +7,17 @@ artifact before it performs any acquisition.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import platform as host_platform
 import struct
+from dataclasses import dataclass
+from typing import ClassVar
 
 
 class UnsupportedPlatformError(RuntimeError):
     """Raised when no published py7zip artifact matches the host."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class PlatformInfo:
     """Normalized platform identity used by the artifact catalog."""
 
@@ -33,7 +34,7 @@ class PlatformInfo:
         system: str | None = None,
         machine: str | None = None,
         bits: int | None = None,
-    ) -> "PlatformInfo":
+    ) -> PlatformInfo:
         """Detect and normalize the current host without touching I/O."""
         raw_system = (system or host_platform.system()).strip().lower()
         raw_machine = (machine or host_platform.machine()).strip().lower()
@@ -78,29 +79,36 @@ class PlatformInfo:
         return cls(normalized_system, raw_machine, pointer_bits, family, architecture)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ArtifactSpec:
     """Published repository-relative binary artifact metadata."""
 
     relative_path: str
     executable_name: str
+    sha256: str
+    size_bytes: int
 
 
 class ArtifactCatalog:
     """Resolve normalized hosts only to non-empty published artifacts."""
 
-    _ARTIFACTS = {
-        ("linux", "pc", "x64"): ArtifactSpec("bin/lin/pc/x64/7za", "7za"),
-        ("linux", "pc", "x86"): ArtifactSpec("bin/lin/pc/x86/7za", "7za"),
-        ("linux", "arm", "x64"): ArtifactSpec("bin/lin/arm/x64/7za", "7za"),
-        ("linux", "arm", "x32"): ArtifactSpec("bin/lin/arm/x32/7za", "7za"),
-        ("windows", "pc", "x64"): ArtifactSpec("bin/win/pc/x64/7za.exe", "7za.exe"),
-        ("windows", "pc", "x86"): ArtifactSpec("bin/win/pc/x86/7za.exe", "7za.exe"),
+    _ARTIFACTS: ClassVar[dict[tuple[str, str, str], ArtifactSpec]] = {
+        ("linux", "pc", "x64"): ArtifactSpec("bin/lin/pc/x64/7za", "7za", "12ef12519899ecda8ba59940d7f25a3f4818c97693538d49e894e6b783fb3081", 2837048),
+        ("linux", "pc", "x86"): ArtifactSpec("bin/lin/pc/x86/7za", "7za", "ca0950c6d4b6e4ed2c7d0d1759b2beb68aecaf95ed31d9e5c1ae9faa914c37b9", 3139200),
+        ("linux", "arm", "x64"): ArtifactSpec("bin/lin/arm/x64/7za", "7za", "271f123d64fb339f3011388005ff781958e4c17b9eb781e4d7a7b38712808a41", 2428216),
+        ("linux", "arm", "x32"): ArtifactSpec("bin/lin/arm/x32/7za", "7za", "1414d731e764b969c22dae77d3948c6f0d1fca7b33eb7a16d016038e4e8ea753", 1519768),
+        ("windows", "pc", "x64"): ArtifactSpec("bin/win/pc/x64/7za.exe", "7za.exe", "827f88db392fbb679ca0dcf0818f32e74b59242061d0e6bc05bac9c672bbde51", 1314816),
+        ("windows", "pc", "x86"): ArtifactSpec("bin/win/pc/x86/7za.exe", "7za.exe", "4721caf434de02b9aeb80b930702bbca75a1d54a5308c3445ec0db0778cfe693", 841216),
         # The repository contains one non-empty universal macOS artifact.
-        ("darwin", "pc", "x64"): ArtifactSpec("bin/mac/any/7za", "7za"),
-        ("darwin", "pc", "x86"): ArtifactSpec("bin/mac/any/7za", "7za"),
-        ("darwin", "arm", "x64"): ArtifactSpec("bin/mac/any/7za", "7za"),
+        ("darwin", "pc", "x64"): ArtifactSpec("bin/mac/any/7za", "7za", "c76d80526586c039e11d9d2ea8fe02324798c5082711178304b5060565859742", 5792768),
+        ("darwin", "pc", "x86"): ArtifactSpec("bin/mac/any/7za", "7za", "c76d80526586c039e11d9d2ea8fe02324798c5082711178304b5060565859742", 5792768),
+        ("darwin", "arm", "x64"): ArtifactSpec("bin/mac/any/7za", "7za", "c76d80526586c039e11d9d2ea8fe02324798c5082711178304b5060565859742", 5792768),
     }
+
+    @classmethod
+    def specs(cls) -> tuple[ArtifactSpec, ...]:
+        """Return each distinct published artifact exactly once."""
+        return tuple(dict.fromkeys(cls._ARTIFACTS.values()))
 
     @classmethod
     def resolve(cls, info: PlatformInfo) -> ArtifactSpec:
@@ -111,4 +119,3 @@ class ArtifactCatalog:
             raise UnsupportedPlatformError(
                 f"no published artifact for {info.system}/{info.family}/{info.architecture}"
             ) from exc
-
