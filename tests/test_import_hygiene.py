@@ -118,7 +118,9 @@ def test_the_top_level_package_defines_no_public_api_of_its_own(tmp_path):
     assert "TOP_PUBLIC:[]" in result.stdout, result.stdout + result.stderr
     assert "HAS_WRAPPER_CLASS:False" in result.stdout, result.stdout + result.stderr
     assert "HAS_ALL:False" in result.stdout, result.stdout + result.stderr
-    assert "AFTER_PUBLIC:['py7zip']" in result.stdout, result.stdout + result.stderr
+    assert (
+        "AFTER_PUBLIC:['acquisition', 'platforms', 'py7zip', 'safe']" in result.stdout
+    ), result.stdout + result.stderr
 
 
 def test_the_shipped_package_directory_contains_no_binaries():
