@@ -40,13 +40,15 @@ class ArtifactManager:
         base_url: str = "https://github.com/aliasfoxkde/py7zip/raw/main",
         timeout: float = 30.0,
         lock_timeout: float = 30.0,
+        lock_stale_after: float = 300.0,
     ) -> None:
-        if timeout <= 0 or lock_timeout <= 0:
+        if timeout <= 0 or lock_timeout <= 0 or lock_stale_after <= 0:
             raise ValueError("timeouts must be positive")
         self.cache_dir = Path(cache_dir)
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.lock_timeout = lock_timeout
+        self.lock_stale_after = lock_stale_after
 
     def ensure(self, info: PlatformInfo) -> Path:
         """Return a verified cached artifact, downloading it when absent."""
@@ -115,7 +117,9 @@ class ArtifactManager:
         root = self.cache_dir.resolve()
         resolved = destination.resolve()
         if resolved.parent != root:
-            raise ArtifactAcquisitionError("artifact destination escapes cache directory")
+            raise ArtifactAcquisitionError(
+                "artifact destination escapes cache directory"
+            )
 
     @contextmanager
     def _lock(self, lock_path: Path) -> Iterator[None]:
@@ -125,9 +129,11 @@ class ArtifactManager:
                 descriptor = os.open(
                     lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600
                 )
-                os.close(descriptor)
+                with os.fdopen(descriptor, "w", encoding="ascii") as lock:
+                    lock.write(f"pid={os.getpid()}\ntime={time.time():.6f}\n")
                 break
             except FileExistsError:
+                self._remove_stale_lock(lock_path)
                 if time.monotonic() >= deadline:
                     raise ArtifactLockTimeout(f"timed out waiting for {lock_path}")
                 time.sleep(0.05)
@@ -135,3 +141,26 @@ class ArtifactManager:
             yield
         finally:
             lock_path.unlink(missing_ok=True)
+
+    def _remove_stale_lock(self, lock_path: Path) -> None:
+        """Remove a lock only when its recorded owner is demonstrably dead."""
+        try:
+            age = time.time() - lock_path.stat().st_mtime
+            if age < self.lock_stale_after:
+                return
+            fields = dict(
+                line.split("=", 1)
+                for line in lock_path.read_text(encoding="ascii").splitlines()
+                if "=" in line
+            )
+            pid = int(fields["pid"])
+        except (OSError, KeyError, ValueError):
+            return
+        if pid == os.getpid():
+            return
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            lock_path.unlink(missing_ok=True)
+        except PermissionError:
+            return
