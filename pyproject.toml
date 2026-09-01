@@ -30,12 +30,11 @@ classifiers = [
     "Programming Language :: Python :: 3 :: 13",
     "Programming Language :: Python :: 3 :: 14",
 ]
-urls = {
-    Homepage = "https://pypi.org/project/py7zip/",
-    "Source Code" = "https://github.com/aliasfoxkde/py7zip",
-    Documentation = "https://github.com/aliasfoxkde/py7zip/blob/main/README.md",
-    "Project Page" = "https://py7zip.cyopsys.com",
-}
+[project.urls]
+Homepage = "https://pypi.org/project/py7zip/"
+"Source Code" = "https://github.com/aliasfoxkde/py7zip"
+Documentation = "https://github.com/aliasfoxkde/py7zip/blob/main/README.md"
+"Project Page" = "https://py7zip.cyopsys.com"
 
 [tool.setuptools.packages.find]
 include = ["py7zip*"]
