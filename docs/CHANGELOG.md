@@ -1,4 +1,11 @@
 ## CHANGELOG
+
+- Unreleased
+  - Added bounded test/package CI for Python 3.9 through 3.13.
+  - Reworked release publishing around published, version-matched releases.
+  - Made the safe runtime the default; legacy behavior requires an explicit
+    migration flag.
+
 - 0.7.3 - Functional Improvements
   - Updated platform check to account for additional cases
   - Setup cloud storage for binaries by platform (system and archetecture).
