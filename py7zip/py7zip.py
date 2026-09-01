@@ -1,58 +1,104 @@
 import os
-import re
-import requests
-import subprocess
 import platform
+import re
+import subprocess
 import urllib.request
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
+
+import requests
+
+from .platforms import ArtifactCatalog
+from .safe import SafePy7zip
 
 
 class Py7zip:
-    """ An unofficial, cross-platform, lightweight, and easy-to-use wrapper
-        for 7zip command-line binaries (7za) in Python. """
+    """An unofficial, cross-platform, lightweight, and easy-to-use wrapper
+    for 7zip command-line binaries (7za) in Python."""
 
-    def __init__(self, verbose=False, debug=False):
-        """ Initializes the class and variables. """
+    def __init__(
+        self,
+        verbose=False,
+        debug=False,
+        *,
+        legacy=False,
+        cache_dir=None,
+        binary_path=None,
+        timeout=300.0,
+    ):
+        """Initializes the class and variables."""
         self.verbose = verbose
         self.debug = debug
+        self.legacy = legacy
+        if not legacy:
+            self._safe = SafePy7zip(
+                cache_dir=cache_dir, binary_path=binary_path, timeout=timeout
+            )
+            self.platform_info = self._safe.platform_info
+            self.binary_path = self._safe.binary_path
+            self.__version__ = self._metadata_version()
+            return
 
         self.platform = platform.system().lower()
-        self.supported = ['windows', 'linux', 'darwin']
+        self.supported = ["windows", "linux", "darwin"]
         self.architecture = platform.architecture()[0]
-        self.username = 'aliasfoxkde'
-        self.app_name = 'py7zip'
-        self.base_bin_url = f'https://github.com/{self.username}/{self.app_name}/raw/main/bin/'
+        self.username = "aliasfoxkde"
+        self.app_name = "py7zip"
+        self.base_bin_url = (
+            f"https://github.com/{self.username}/{self.app_name}/raw/main/bin/"
+        )
         self.raw_usercontent = "https://raw.githubusercontent.com"
         self.debug_info = platform.uname()
 
         # Move platform check to dedicated function
-        if platform.machine() in ['AMD64', 'x86_64']:
-            self.sys_type = 'pc'
-        elif 'arm' in platform.machine():
-            self.sys_type = 'arm'
+        if platform.machine() in ["AMD64", "x86_64"]:
+            self.sys_type = "pc"
+        elif "arm" in platform.machine():
+            self.sys_type = "arm"
         else:
             raise NotImplementedError("No machine type could be detected. Exiting.")
 
-        self.arch_type = {'32bit': 'x86', '64bit': 'x64', 'arm64': 'x64', 'arm32': 'x86'}[self.architecture]
-        self.sys_platform = {'windows': 'win', 'linux': 'lin', 'darwin': 'mac'}[self.platform]
-        self.extension = {'windows': '.exe', 'linux': '', 'darwin': ''}[self.platform]
-        self.url = f'{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}'
-        self.binary_path = os.path.join(os.path.dirname(__file__), f'7za{self.extension}')
+        self.arch_type = {
+            "32bit": "x86",
+            "64bit": "x64",
+            "arm64": "x64",
+            "arm32": "x86",
+        }[self.architecture]
+        self.sys_platform = {"windows": "win", "linux": "lin", "darwin": "mac"}[
+            self.platform
+        ]
+        self.extension = {"windows": ".exe", "linux": "", "darwin": ""}[self.platform]
+        self.url = f"{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}"
+        self.binary_path = os.path.join(
+            os.path.dirname(__file__), f"7za{self.extension}"
+        )
         self.__version__ = self.get_version()
         self.setup()
 
+    @staticmethod
+    def _metadata_version():
+        try:
+            return package_version("py7zip")
+        except PackageNotFoundError:
+            return "0.7.3"
+
     def get_version(self, verbose=False):
         """Construct the URL to fetch CHANGELOG.md and find the version number."""
+        if not self.legacy:
+            return self._metadata_version()
         changelog_url = f"{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
-        
+
         try:
             # Fetch the content of the CHANGELOG.md file from the URL
             response = requests.get(changelog_url)
             response.raise_for_status()  # Raise an error for bad responses
             changelog_content = response.text
-            
+
             # Search for the version in the content
-            version_match = re.search(r'^-\s*(\d+\.\d+\.\d+)', changelog_content, re.MULTILINE)
-            
+            version_match = re.search(
+                r"^-\s*(\d+\.\d+\.\d+)", changelog_content, re.MULTILINE
+            )
+
             if version_match:
                 version = version_match.group(1)
                 if verbose:
@@ -65,15 +111,17 @@ class Py7zip:
             version = "0.0.0"
             if verbose:
                 print(f"Error fetching CHANGELOG.md: {e}")
-        
+
         return version
 
     def setup(self):
-        """ Checks the system for prerequisites and performs the required steps. """
+        """Checks the system for prerequisites and performs the required steps."""
+        if not self.legacy:
+            return
         try:
             if not os.path.exists(self.binary_path):
                 self.download_binary()
-        except Exception as err:
+        except (OSError, requests.RequestException) as err:
             print(err)
 
     @staticmethod
@@ -81,23 +129,38 @@ class Py7zip:
         os.chdir(directory_path)
 
     def download_binary(self):
-        """ Dynamically downloads the binary required for the given platform. """
+        """Dynamically downloads the binary required for the given platform."""
+        if not self.legacy:
+            self.binary_path = self._safe.ensure_binary()
+            return self.binary_path
         binary_url = self.get_binary_url()
         binary_dir = os.path.dirname(self.binary_path)
         os.makedirs(binary_dir, exist_ok=True)
 
-        with urllib.request.urlopen(binary_url) as response, open(self.binary_path, 'wb') as out_file:
+        with (
+            urllib.request.urlopen(binary_url) as response,
+            open(self.binary_path, "wb") as out_file,
+        ):
             out_file.write(response.read())
             os.chmod(self.binary_path, 0o755)
 
     def get_binary_url(self):
-        """ Dynamically gets the URL of the required system binary. """
+        """Dynamically gets the URL of the required system binary."""
+        if not self.legacy:
+            spec = ArtifactCatalog.resolve(self.platform_info)
+            return f"{self._safe.cache_dir}/{spec.relative_path}"
         if self.platform not in self.supported:
             raise NotImplementedError(f"Platform '{self.platform}' is not supported.")
         return self.url
 
-    def wrapper(self, src, dst, options='', method="decompress"):
-        """ Method used to extract an archive. """
+    def wrapper(self, src, dst, options="", method="decompress"):
+        """Method used to extract an archive."""
+        if not self.legacy:
+            operation = "compress" if method == "compress" else "decompress"
+            result = self._safe.run(operation, src, dst, options)
+            if self.debug and result.stdout:
+                print(result.stdout)
+            return result
         if method == "compress":
             command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
             success_msg = f"Backup created from '{src}' to '{dst}'."
@@ -108,7 +171,9 @@ class Py7zip:
             error_msg = f"Failed to create backup from '{src}' to '{dst}'."
 
         try:
-            result = subprocess.run(command, capture_output=True, text=True, shell=True, check=True)
+            result = subprocess.run(
+                command, capture_output=True, text=True, shell=True, check=True
+            )
             if self.debug:
                 print(result.stdout)
             if self.verbose:
@@ -119,33 +184,38 @@ class Py7zip:
             if self.verbose:
                 print(error_msg)
 
-    def decompress(self, src, dst, options=''):
-        """ Method used to extract an archive. """
-        self.wrapper(src, dst, options='', method="decompress")
+    def decompress(self, src, dst, options=""):
+        """Method used to extract an archive."""
+        return self.wrapper(src, dst, options=options, method="decompress")
 
-    def extract(self, src, dst, options=''):
-        """ Alias used for 'decompress' method. """
-        self.wrapper(src, dst, options='', method="decompress")
+    def extract(self, src, dst, options=""):
+        """Alias used for 'decompress' method."""
+        return self.wrapper(src, dst, options=options, method="decompress")
 
-    def compress(self, src, dst, options=''):
-        """ Method used to backup files, folders, or directories to an archive. """
-        self.wrapper(src, dst, options='', method="compress")
+    def compress(self, src, dst, options=""):
+        """Method used to backup files, folders, or directories to an archive."""
+        return self.wrapper(src, dst, options=options, method="compress")
 
-    def archive(self, src, dst, options=''):
-        """ Alias used for compress method. """
-        self.wrapper(src, dst, options='', method="compress")
+    def archive(self, src, dst, options=""):
+        """Alias used for compress method."""
+        return self.wrapper(src, dst, options=options, method="compress")
 
-    def backup(self, src, dst, options=''):
-        """ Alias used for compress method. """
-        self.wrapper(src, dst, options='', method="compress")
+    def backup(self, src, dst, options=""):
+        """Alias used for compress method."""
+        return self.wrapper(src, dst, options=options, method="compress")
 
-    def full(self, src, dst, options=''): pass
-    def incremental(self, src, dst, options=''): pass
-    def differential(self, src, dst, options=''): pass
+    def full(self, src, dst, options=""):
+        return
 
-    def snapshot(self, src, dst, options=''):
-        """ Streamlines the process for creating a snapshot. """
-        pass
+    def incremental(self, src, dst, options=""):
+        return
+
+    def differential(self, src, dst, options=""):
+        return
+
+    def snapshot(self, src, dst, options=""):
+        """Streamlines the process for creating a snapshot."""
+        return
 
 
 if __name__ == "__main__":

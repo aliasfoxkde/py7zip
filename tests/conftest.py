@@ -115,7 +115,7 @@ def make_wrapper(monkeypatch):
         requests_fake = fakes.FakeRequests(responder=requests_responder).install(
             monkeypatch
         )
-        wrapper = py7zip_module.Py7zip()
+        wrapper = py7zip_module.Py7zip(legacy=True)
         wrapper._requests_fake = requests_fake
         return wrapper
 

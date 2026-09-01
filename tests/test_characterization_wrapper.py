@@ -68,7 +68,7 @@ def test_decompress_builds_the_extract_command_string(make_wrapper, monkeypatch)
 
     assert runner.commands == ['"7za" x "/data/input.7z" -o"/data/out" ']
     assert runner.kwargs == [
-        dict(shell=True, check=True, capture_output=True, text=True)
+        {"shell": True, "check": True, "capture_output": True, "text": True}
     ]
 
 
@@ -91,9 +91,7 @@ def test_compress_puts_the_destination_before_the_source(make_wrapper, monkeypat
     assert runner.commands == ['"7za" a "DST" "SRC" ']
 
 
-def test_options_are_appended_verbatim_to_the_command_string(
-    make_wrapper, monkeypatch
-):
+def test_options_are_appended_verbatim_to_the_command_string(make_wrapper, monkeypatch):
     runner = FakeSubprocess().install(monkeypatch)
 
     wrapper = make_wrapper()
@@ -145,7 +143,9 @@ def test_wrapper_swallows_the_nonzero_exit_instead_of_raising(
         raise AssertionError(f"wrapper raised {exc!r} instead of returning") from exc
 
 
-def test_stdout_is_printed_only_in_debug_and_verbose_modes(make_wrapper, monkeypatch, capsys):
+def test_stdout_is_printed_only_in_debug_and_verbose_modes(
+    make_wrapper, monkeypatch, capsys
+):
     runner = FakeSubprocess(stdout="Everything is Ok").install(monkeypatch)
 
     wrapper = make_wrapper()
@@ -163,8 +163,10 @@ def test_stdout_is_printed_only_in_debug_and_verbose_modes(make_wrapper, monkeyp
     assert runner.commands != []
 
 
-def test_stderr_is_printed_only_in_debug_and_verbose_modes(make_wrapper, monkeypatch, capsys):
-    runner = FakeSubprocess(returncode=2, stderr="Broken archive").install(monkeypatch)
+def test_stderr_is_printed_only_in_debug_and_verbose_modes(
+    make_wrapper, monkeypatch, capsys
+):
+    FakeSubprocess(returncode=2, stderr="Broken archive").install(monkeypatch)
 
     wrapper = make_wrapper()
     wrapper.wrapper("src", "dst", method="decompress")
@@ -261,8 +263,8 @@ def test_aliases_forward_to_the_wrapper_as_compress(make_wrapper, monkeypatch):
     ]
 
 
-def test_aliases_silently_discard_the_callers_options(make_wrapper, monkeypatch):
-    """Every alias hard-codes ``options=''`` when it calls ``wrapper``."""
+def test_legacy_aliases_forward_the_callers_options(make_wrapper, monkeypatch):
+    """Compatibility aliases preserve options instead of silently dropping them."""
     runner = FakeSubprocess().install(monkeypatch)
 
     wrapper = make_wrapper()
@@ -270,8 +272,8 @@ def test_aliases_silently_discard_the_callers_options(make_wrapper, monkeypatch)
     wrapper.compress("src", "dst.7z", options="-mx=9")
 
     assert runner.commands == [
-        '"7za" x "src.7z" -o"out" ',
-        '"7za" a "dst.7z" "src" ',
+        '"7za" x "src.7z" -o"out" -y',
+        '"7za" a "dst.7z" "src" -mx=9',
     ]
 
 
@@ -311,7 +313,12 @@ def test_snapshot_family_methods_accept_the_shared_signature(name):
     """All four are public-looking methods with the wrapper's signature."""
     method = getattr(py7zip_module.Py7zip, name)
 
-    assert list(inspect.signature(method).parameters) == ["self", "src", "dst", "options"]
+    assert list(inspect.signature(method).parameters) == [
+        "self",
+        "src",
+        "dst",
+        "options",
+    ]
 
 
 def test_every_public_alias_funnels_through_wrapper(make_wrapper, monkeypatch):
@@ -324,9 +331,8 @@ def test_every_public_alias_funnels_through_wrapper(make_wrapper, monkeypatch):
         getattr(wrapper, name)("SRC", "DST")
 
     assert len(runner.commands) == len(public)
-    assert runner.kwargs == [
-        dict(shell=True, check=True, capture_output=True, text=True)
-    ] * len(public)
+    expected = {"shell": True, "check": True, "capture_output": True, "text": True}
+    assert all(kwargs == expected for kwargs in runner.kwargs)
 
 
 def test_cd_is_a_process_global_side_effect(monkeypatch, tmp_path, clean_cwd):
