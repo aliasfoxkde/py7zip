@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import time
 from pathlib import Path
 
 import pytest
 
-from py7zip.acquisition import ArtifactIntegrityError, ArtifactManager
+from py7zip.acquisition import (
+    ArtifactIntegrityError,
+    ArtifactLockTimeout,
+    ArtifactManager,
+)
 from py7zip.platforms import ArtifactCatalog, ArtifactSpec, PlatformInfo
 
 
@@ -28,7 +34,9 @@ def test_manager_downloads_verifies_and_reuses_cache(tmp_path, monkeypatch):
         "py7zip.acquisition.ArtifactCatalog.resolve", lambda _info: spec
     )
 
-    manager = ArtifactManager(tmp_path / "cache", base_url=(tmp_path / "source").as_uri())
+    manager = ArtifactManager(
+        tmp_path / "cache", base_url=(tmp_path / "source").as_uri()
+    )
     first = manager.ensure(info)
     second = manager.ensure(info)
 
@@ -66,7 +74,9 @@ def test_manager_rejects_oversized_download(tmp_path, monkeypatch):
     )
 
     with pytest.raises(ArtifactIntegrityError, match="exceeds catalog size"):
-        ArtifactManager(tmp_path / "cache", base_url=(tmp_path / "source").as_uri()).ensure(info)
+        ArtifactManager(
+            tmp_path / "cache", base_url=(tmp_path / "source").as_uri()
+        ).ensure(info)
 
 
 @pytest.mark.parametrize(
@@ -77,3 +87,28 @@ def test_catalog_digests_match_checked_in_artifacts(spec):
 
     assert artifact.stat().st_size == spec.size_bytes
     assert hashlib.sha256(artifact.read_bytes()).hexdigest() == spec.sha256
+
+
+def test_lock_recovery_removes_lock_owned_by_dead_process(tmp_path):
+    manager = ArtifactManager(tmp_path, lock_stale_after=0.01)
+    lock = tmp_path / ".7za.lock"
+    lock.write_text("pid=999999999\ntime=0\n", encoding="ascii")
+    old = time.time() - 10
+    os.utime(lock, (old, old))
+
+    with manager._lock(lock):
+        assert lock.exists()
+        assert f"pid={os.getpid()}" in lock.read_text(encoding="ascii")
+    assert not lock.exists()
+
+
+def test_lock_owned_by_current_process_times_out(tmp_path):
+    manager = ArtifactManager(tmp_path, lock_timeout=0.01, lock_stale_after=0.01)
+    lock = tmp_path / ".7za.lock"
+    lock.write_text(f"pid={os.getpid()}\ntime=0\n", encoding="ascii")
+    old = time.time() - 10
+    os.utime(lock, (old, old))
+
+    with pytest.raises(ArtifactLockTimeout), manager._lock(lock):
+        pass
+    lock.unlink()
