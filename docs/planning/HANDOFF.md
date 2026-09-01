@@ -1,7 +1,7 @@
 # py7zip handoff
 
-**Evidence boundary (central audit):** branch `main`, HEAD `a7b396c`, 0 dirty
-status entries before this metadata change.
+**Evidence boundary (central audit):** branch `main`, HEAD
+`91de1216a187dcddddd0f71d42d2051983d458f5`, 0 dirty status entries.
 **Status:** active wrapper; package/runtime qualification is incomplete.
 **Rating:** 5/10 (advisory; not a production-readiness claim).
 
@@ -20,6 +20,15 @@ status entries before this metadata change.
   snapshot/incremental APIs; these are not release-qualified features.
 - Historical documentation and release notes live under `docs/`; canonical
   future release notes belong under `.github/CHANGELOG.md`.
+
+## Verified packaging baseline
+
+From a clean Fedora checkout of `91de121`, Python compilation, metadata
+discovery, and wheel creation passed. The wheel is `py7zip-0.7.3-py3-none-any`
+with SHA-256
+`bfce222353c7dd588087460d003084df578d89c7e252498a0a32db84171922f0`.
+The probe used `/nas/Temp/artifacts` for temporary and pip-cache storage.
+This does not qualify platform-specific binary downloads or archive execution.
 
 ## Required next work
 
