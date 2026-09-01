@@ -2,12 +2,20 @@ import os
 import re
 from setuptools import setup
 from setuptools.command.install import install
-from py7zip import py7zip
+
+
+def read_version():
+    """Read the package version without importing runtime dependencies."""
+    with open("docs/CHANGELOG.md", encoding="utf-8") as changelog:
+        match = re.search(r"^[-#]\s*(\d+\.\d+\.\d+)", changelog.read(), re.MULTILINE)
+    if not match:
+        raise RuntimeError("No semantic version found in docs/CHANGELOG.md")
+    return match.group(1)
 
 __name__ = 'py7zip'
 __author__ = 'AliasfoxKDE'
 __description__ = "An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. "
-__version__ = py7zip.Py7zip().get_version()
+__version__ = read_version()
 
 project_urls = {
     'Homepage': f'https://pypi.org/project/{__name__}',
