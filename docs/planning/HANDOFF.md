@@ -1,7 +1,6 @@
 # py7zip handoff
 
-**Evidence boundary (central audit):** branch `main`, HEAD
-`91de1216a187dcddddd0f71d42d2051983d458f5`, 0 dirty status entries.
+**Evidence boundary (central audit):** branch `main`, HEAD `91de1216a187dcddddd0f71d42d2051983d458f5`, 0 dirty status entries.
 **Status:** active wrapper; package/runtime qualification is incomplete.
 **Rating:** 5/10 (advisory; not a production-readiness claim).
 
