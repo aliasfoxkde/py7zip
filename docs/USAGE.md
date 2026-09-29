@@ -10,7 +10,7 @@ z = py7zip.Py7zip(cache_dir="~/.cache/py7zip")
 binary = z.ensure_binary()  # downloads a checksum-verified 7za on first call
 
 src = "path/to/file-or-folder"
-archive = "path/to/backup.7z"   # for compress, the destination IS the archive
+archive = "path/to/backup.7z"  # for compress, the destination IS the archive
 outdir = "path/to/output/directory"  # for decompress, the destination is a dir
 
 # Compress source file or directory into an archive (a command)
@@ -34,10 +34,10 @@ z.decompress(archive, outdir, options=("-y",))
 
 ### Backup family
 ```python
-z.full(src, archive)                 # complete archive (a -y)
-z.incremental(src, archive)          # update in place; deletions are kept
-z.differential(src, archive)         # writes <archive-stem>.diff.7z next to it
-z.snapshot(src, "backups/site.7z")   # stamps the name: site.20260928T221500.7z
+z.full(src, archive)  # complete archive (a -y)
+z.incremental(src, archive)  # update in place; deletions are kept
+z.differential(src, archive)  # writes <archive-stem>.diff.7z next to it
+z.snapshot(src, "backups/site.7z")  # stamps the name: site.20260928T221500.7z
 ```
 
 Differential restore is two extractions, base first, then the diff with

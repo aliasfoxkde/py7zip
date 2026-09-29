@@ -20,7 +20,7 @@ and the current qualification boundary ([HANDOFF.md](planning/HANDOFF.md)).
 - [x] Add simplified functions for various commands (full, incremental, differential, snapshot)
 - [x] Build out and test initial functionality: compress, decompress, snapshot, backup
 - [x] Argument-list subprocess boundary with explicit error propagation (replaces shell strings)
-- [x] Deterministic offline test suite (182 tests, 100% line and branch coverage)
+- [x] Deterministic offline test suite (183 tests, 100% line and branch coverage)
 - [x] Strict ruff lint and format configuration, zero findings
 - [x] Offline import guarantee (`import py7zip` performs no I/O and re-exports the public API)
 - [x] PEP 621 packaging; version sourced from `pyproject.toml`

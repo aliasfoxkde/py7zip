@@ -84,7 +84,7 @@ class Py7zip:
         try:
             return package_version("py7zip")
         except PackageNotFoundError:
-            return "0.7.3"
+            return "0.8.0"
 
     def get_version(self, verbose=False):
         """Construct the URL to fetch CHANGELOG.md and find the version number."""

@@ -6,6 +6,7 @@ import socket
 
 import pytest
 
+import py7zip
 from py7zip.py7zip import Py7zip
 from py7zip.safe import ArchiveRunner
 
@@ -19,7 +20,9 @@ def test_default_constructor_is_offline_and_does_not_download(monkeypatch, tmp_p
 
     assert wrapper.legacy is False
     assert wrapper.binary_path is None
-    assert wrapper.__version__ == "0.7.3"
+    # The version is metadata-backed and needs no network; the wrapper and
+    # the package must report the same source.
+    assert wrapper.__version__ == py7zip.__version__
     assert list(tmp_path.iterdir()) == []
 
 

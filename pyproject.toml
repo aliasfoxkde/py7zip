@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py7zip"
-version = "0.7.3"
+version = "0.8.0"
 description = "An unofficial, cross-platform, lightweight wrapper for 7-Zip command-line binaries."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"

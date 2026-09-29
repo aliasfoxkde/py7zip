@@ -1,10 +1,30 @@
 ## CHANGELOG
 
+- 0.8.0 - Safe Runtime Qualification
+  - Made the safe runtime the default: platform detection on construction
+    only, with digest-verified binary acquisition and archive execution as
+    explicit operations (legacy behaviour remains behind `legacy=True`).
+  - Implemented the backup family for real: `full`, `incremental`,
+    `differential`, and `snapshot` now execute through the argv runtime,
+    with the differential restore procedure documented.
+  - Replaced shell-string subprocess execution with an argument-list
+    boundary, timeouts, structured `ArchiveResult` values, and typed errors.
+  - Added archive-member validation on extraction (zip-slip protection),
+    proven against a real `../` member.
+  - Re-exported the public API at the package root, so `import py7zip;
+    py7zip.Py7zip()` works, with an offline import guarantee.
+  - Added an offline test suite of 183 tests at 100% line and branch
+    coverage (fail-under-99 gate), including end-to-end lanes that run the
+    bundled binary for the detected host.
+  - Adopted strict ruff lint and format configuration at zero findings.
+  - Added a checksummed artifact catalog (SHA-256 and size per platform) and
+    a stale-lock-aware cache lock for binary acquisition.
+  - Removed the dead `py7zip/tests/debugging.py` dev script from the package.
+  - Refreshed documentation: usage examples for the current contract,
+    compatibility ledger, receipted platform matrix, glossary, and setup
+    guide for the PEP 621 workflow.
+
 - Unreleased
-  - Added bounded test/package CI for Python 3.9 through 3.13.
-  - Reworked release publishing around published, version-matched releases.
-  - Made the safe runtime the default; legacy behavior requires an explicit
-    migration flag.
 
 - 0.7.3 - Functional Improvements
   - Updated platform check to account for additional cases

@@ -6,14 +6,18 @@ characterization and e2e suites only touch indirectly.
 
 from __future__ import annotations
 
+import importlib
+import importlib.metadata
 import runpy
 import subprocess
 import warnings
 from datetime import datetime
+from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 
 import pytest
 
+import py7zip
 import py7zip.py7zip as py7zip_module
 import py7zip.safe as safe_module
 from py7zip.platforms import ArtifactCatalog
@@ -29,6 +33,26 @@ def test_safe_get_version_reads_installed_metadata(tmp_path, monkeypatch):
 
     assert wrapper.__version__ == "9.9.9"
     assert wrapper.get_version() == "9.9.9"
+
+
+def test_version_falls_back_when_no_distribution_is_installed(monkeypatch):
+    """Without installed metadata both version surfaces use the pinned value."""
+
+    def raise_missing(name):
+        raise PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", raise_missing)
+    monkeypatch.setattr(py7zip_module, "package_version", raise_missing)
+
+    wrapper_version = Py7zip._metadata_version()
+    importlib.reload(py7zip)
+    try:
+        package_version = py7zip.__version__
+    finally:
+        importlib.reload(py7zip)  # restore the metadata-backed value
+
+    assert wrapper_version == package_version
+    assert package_version.count(".") == 2
 
 
 def test_legacy_version_probe_without_match_prints_when_verbose(make_wrapper, capsys):
