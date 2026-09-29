@@ -6,6 +6,7 @@ import os
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from .acquisition import ArtifactManager
@@ -54,26 +55,45 @@ class ArchiveRunner:
         destination: str | os.PathLike[str],
         options: Sequence[str] = (),
     ) -> ArchiveResult:
-        """Run an archive operation without invoking a shell."""
-        if operation not in {"compress", "decompress"}:
-            raise ValueError("operation must be 'compress' or 'decompress'")
+        """Run an archive operation without invoking a shell.
+
+        ``compress`` builds ``a <destination> <source>``; ``decompress``
+        builds ``x <source> -o<destination>``; ``update`` builds
+        ``u <archive> <source>``.  In every case the destination comes
+        before the source on the command line.
+        """
+        if operation not in {"compress", "decompress", "update"}:
+            raise ValueError("operation must be 'compress', 'decompress' or 'update'")
         if isinstance(options, (str, bytes)):
             raise TypeError("options must be a sequence of individual arguments")
 
         source_text = os.fspath(source)
         destination_text = os.fspath(destination)
         option_args = tuple(os.fspath(option) for option in options)
-        command = (
-            (str(self.binary_path), "a", destination_text, source_text, *option_args)
-            if operation == "compress"
-            else (
+        if operation == "compress":
+            command = (
+                str(self.binary_path),
+                "a",
+                destination_text,
+                source_text,
+                *option_args,
+            )
+        elif operation == "update":
+            command = (
+                str(self.binary_path),
+                "u",
+                destination_text,
+                source_text,
+                *option_args,
+            )
+        else:
+            command = (
                 str(self.binary_path),
                 "x",
                 source_text,
                 f"-o{destination_text}",
                 *option_args,
             )
-        )
         if any("\x00" in argument for argument in command):
             raise ValueError("archive arguments cannot contain NUL bytes")
 
@@ -205,3 +225,82 @@ class SafePy7zip:
         runner = ArchiveRunner(self.ensure_binary(), timeout=self.timeout)
         validate_archive_members(runner.list_entries(source), destination)
         return runner.run("decompress", source, destination, options)
+
+    def full(
+        self,
+        source: str | os.PathLike[str],
+        destination: str | os.PathLike[str],
+        options: Sequence[str] = (),
+    ) -> ArchiveResult:
+        """Create a complete archive of ``source`` at ``destination``.
+
+        Every file currently on disk is stored; nothing is inherited from a
+        previous archive.  ``-y`` is prepended so an unattended run never
+        blocks on an overwrite prompt; caller options follow it.
+        """
+        return self.run("compress", source, destination, ("-y", *options))
+
+    def incremental(
+        self,
+        source: str | os.PathLike[str],
+        destination: str | os.PathLike[str],
+        options: Sequence[str] = (),
+    ) -> ArchiveResult:
+        """Update ``destination`` in place with 7-Zip's default ``u`` semantics.
+
+        The newest copy of each file wins, files absent from the source keep
+        their archived copies, and a missing archive is created.  Note this
+        retains deleted files by design; use ``snapshot`` for a fresh full
+        copy or ``differential`` to record deletions.
+        """
+        return self.run("update", source, destination, ("-y", *options))
+
+    def differential(
+        self,
+        source: str | os.PathLike[str],
+        destination: str | os.PathLike[str],
+        diff_path: str | os.PathLike[str] | None = None,
+        options: Sequence[str] = (),
+    ) -> ArchiveResult:
+        """Write everything that differs from the base archive to a diff.
+
+        ``destination`` is the existing base archive and is left untouched.
+        The diff archive receives new files, files whose disk copy is newer
+        or otherwise diverges, and anti (tombstone) entries for deletions.
+        Restoring is extracting the base archive and then the diff over it.
+        The diff must be 7z format because anti entries are a 7z feature;
+        ``diff_path`` defaults to ``<destination>.diff.7z``.
+        """
+        diff = (
+            Path(diff_path)
+            if diff_path is not None
+            else Path(f"{os.fspath(destination)}.diff.7z")
+        )
+        if diff.suffix.lower() != ".7z":
+            raise ValueError("differential archives must use the .7z format")
+        update_switch = f"-up0q3r2x2y2z0w2!{os.fspath(diff)}"
+        return self.run(
+            "update", source, destination, ("-y", "-u-", update_switch, *options)
+        )
+
+    def snapshot(
+        self,
+        source: str | os.PathLike[str],
+        destination: str | os.PathLike[str],
+        options: Sequence[str] = (),
+        *,
+        timestamp: str | None = None,
+    ) -> ArchiveResult:
+        """Create a timestamped full archive and leave any original intact.
+
+        ``destination`` is the archive path; its name stem gains a
+        ``YYYYmmddTHHMMSS`` component, so ``backups/site.7z`` becomes
+        ``backups/site.20260928T221500.7z``.  ``timestamp`` overrides the
+        stamp for deterministic runs.
+        """
+        stamp = timestamp if timestamp is not None else datetime.now().strftime(
+            "%Y%m%dT%H%M%S"
+        )
+        target = Path(destination)
+        stamped = target.with_name(f"{target.stem}.{stamp}.7z")
+        return self.run("compress", source, stamped, ("-y", *options))

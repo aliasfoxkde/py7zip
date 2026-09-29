@@ -19,10 +19,12 @@ from __future__ import annotations
 
 import inspect
 import os
+import subprocess
 
 import pytest
 
 import py7zip.py7zip as py7zip_module
+import py7zip.safe as py7zip_safe_module
 from tests.fakes import FakeSubprocess
 
 POSIX = pytest.mark.skipif(
@@ -298,27 +300,72 @@ def test_paths_are_not_validated_before_execution(make_wrapper, monkeypatch):
 
 
 @pytest.mark.parametrize("name", ["full", "incremental", "differential", "snapshot"])
-def test_snapshot_family_methods_do_nothing(make_wrapper, monkeypatch, name):
-    runner = FakeSubprocess().install(monkeypatch)
+def test_snapshot_family_methods_execute_via_the_argv_runtime(
+    make_wrapper, monkeypatch, name
+):
+    """The former no-op stubs now run real 7-Zip operations.
+
+    Legacy mode resolves ``7za`` from PATH (the same execution model as the
+    shell-string wrapper) but the backup family runs it through the safe
+    argv runtime, so the recorded command is an argument vector, never a
+    shell string.
+    """
+    recorded = []
+
+    def record_run(command, **_kwargs):
+        recorded.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(py7zip_safe_module.subprocess, "run", record_run)
+    monkeypatch.setattr(py7zip_module.shutil, "which", lambda _name: "/resolved/7za")
 
     wrapper = make_wrapper()
-    result = getattr(wrapper, name)("src", "dst", options="-y")
+    result = getattr(wrapper, name)("src", "dst")
 
-    assert result is None
-    assert runner.commands == []
+    assert result.success is True
+    expected = {
+        "full": ("/resolved/7za", "a", "dst", "src", "-y"),
+        "incremental": ("/resolved/7za", "u", "dst", "src", "-y"),
+        "differential": (
+            "/resolved/7za",
+            "u",
+            "dst",
+            "src",
+            "-y",
+            "-u-",
+            "-up0q3r2x2y2z0w2!dst.diff.7z",
+        ),
+    }
+    if name == "snapshot":
+        command = result.command
+        archive = command[2]
+        assert command[:2] == ("/resolved/7za", "a")
+        assert archive.startswith("dst.") and archive.endswith(".7z")
+        stamp = archive[len("dst.") : -len(".7z")]
+        assert len(stamp) == 15 and stamp[8] == "T"
+    else:
+        assert result.command == expected[name]
+    assert len(recorded) == 1
 
 
 @pytest.mark.parametrize("name", ["full", "incremental", "differential", "snapshot"])
-def test_snapshot_family_methods_accept_the_shared_signature(name):
-    """All four are public-looking methods with the wrapper's signature."""
+def test_snapshot_family_methods_keep_the_shared_signature(name):
+    """All four accept the wrapper's positional signature.
+
+    Keyword-only extras (``diff_path``, ``timestamp``) may extend the
+    historical ``(src, dst, options)`` shape, but the historical call
+    form must keep working.
+    """
     method = getattr(py7zip_module.Py7zip, name)
 
-    assert list(inspect.signature(method).parameters) == [
+    parameters = list(inspect.signature(method).parameters.values())
+    assert [parameter.name for parameter in parameters[:4]] == [
         "self",
         "src",
         "dst",
         "options",
     ]
+    assert all(parameter.kind is inspect.Parameter.KEYWORD_ONLY for parameter in parameters[4:])
 
 
 def test_every_public_alias_funnels_through_wrapper(make_wrapper, monkeypatch):

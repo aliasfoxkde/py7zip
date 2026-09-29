@@ -1,6 +1,7 @@
 import os
 import platform
 import re
+import shutil
 import subprocess
 import urllib.request
 from importlib.metadata import PackageNotFoundError
@@ -9,7 +10,7 @@ from importlib.metadata import version as package_version
 import requests
 
 from .platforms import ArtifactCatalog
-from .safe import SafePy7zip
+from .safe import ArchiveExecutionError, SafePy7zip
 
 
 class Py7zip:
@@ -156,11 +157,19 @@ class Py7zip:
     def wrapper(self, src, dst, options="", method="decompress"):
         """Method used to extract an archive."""
         if not self.legacy:
-            operation = "compress" if method == "compress" else "decompress"
             safe_options = () if options == "" else options
-            result = self._safe.run(operation, src, dst, safe_options)
+            if method == "compress":
+                result = self._safe.compress(src, dst, safe_options)
+                success_msg = f"Backup created from '{src}' to '{dst}'."
+                error_msg = f"Failed to compress archive from '{src}' to '{dst}'."
+            else:
+                result = self._safe.decompress(src, dst, safe_options)
+                success_msg = f"Extracted archive from '{src}' to '{dst}'"
+                error_msg = f"Failed to extract archive from '{src}' to '{dst}'."
             if self.debug and result.stdout:
                 print(result.stdout)
+            if self.verbose:
+                print(success_msg if result.success else error_msg)
             return result
         if method == "compress":
             command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
@@ -205,18 +214,72 @@ class Py7zip:
         """Alias used for compress method."""
         return self.wrapper(src, dst, options=options, method="compress")
 
+    @staticmethod
+    def _normalize_options(options):
+        """Map the historical empty-string default onto an empty argv.
+
+        Any non-empty string is passed through unchanged so the argv
+        runtime rejects it with the same ``TypeError`` as the aliases;
+        individual switch arguments are required.
+        """
+        if options == "" or options is None:
+            return ()
+        return options
+
+    def _backup_executor(self):
+        """Return the object providing full/incremental/differential/snapshot.
+
+        Safe mode delegates to the ``SafePy7zip`` instance.  Legacy mode
+        resolves ``7za`` from PATH exactly like ``wrapper`` does and wraps it
+        in the same argv runtime, so the backup methods execute identically
+        in both modes.
+        """
+        if not self.legacy:
+            return self._safe
+        executable = shutil.which(f"7za{self.extension}")
+        if executable is None:
+            raise ArchiveExecutionError(
+                f"'7za{self.extension}' was not found on PATH; install the "
+                "7-Zip command line tool or use the default (safe) mode, "
+                "which acquires a verified binary."
+            )
+        return SafePy7zip(binary_path=executable)
+
     def full(self, src, dst, options=""):
-        return
+        """Create a complete archive of ``src`` at ``dst``."""
+        return self._backup_executor().full(
+            src, dst, self._normalize_options(options)
+        )
 
     def incremental(self, src, dst, options=""):
-        return
+        """Update ``dst`` in place so every file matches its newest copy.
 
-    def differential(self, src, dst, options=""):
-        return
+        Files deleted from ``src`` keep their archived copies; see
+        ``SafePy7zip.incremental``.
+        """
+        return self._backup_executor().incremental(
+            src, dst, self._normalize_options(options)
+        )
 
-    def snapshot(self, src, dst, options=""):
-        """Streamlines the process for creating a snapshot."""
-        return
+    def differential(self, src, dst, options="", *, diff_path=None):
+        """Write everything that differs from the base archive ``dst``.
+
+        The base archive is left untouched.  The diff path defaults to
+        ``<dst>.diff.7z``; see ``SafePy7zip.differential``.
+        """
+        return self._backup_executor().differential(
+            src, dst, diff_path=diff_path, options=self._normalize_options(options)
+        )
+
+    def snapshot(self, src, dst, options="", *, timestamp=None):
+        """Create a timestamped full archive of ``src``.
+
+        ``dst`` gains a ``YYYYmmddTHHMMSS`` component in its name; see
+        ``SafePy7zip.snapshot``.
+        """
+        return self._backup_executor().snapshot(
+            src, dst, self._normalize_options(options), timestamp=timestamp
+        )
 
 
 if __name__ == "__main__":

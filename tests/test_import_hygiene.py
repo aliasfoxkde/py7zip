@@ -8,6 +8,7 @@ so a module-level import side effect cannot hide behind fixture ordering.
 
 from __future__ import annotations
 
+import ast
 import os
 import subprocess
 import sys
@@ -101,26 +102,35 @@ def test_import_does_not_install_a_binary_beside_the_source(tmp_path):
     assert not (PACKAGE_DIR / "7za.exe").exists()
 
 
-def test_the_top_level_package_defines_no_public_api_of_its_own(tmp_path):
-    """``import py7zip`` declares no public API of its own.
+def test_the_top_level_package_reexports_the_public_api(tmp_path):
+    """``import py7zip`` exposes the documented API with no side effects.
 
-    Two distinct facts are pinned here because they are easy to conflate.
-    Before the submodule is imported, the package root exposes no public
-    names at all: the empty ``__init__.py`` adds nothing, defines no
-    ``Py7zip`` re-export and sets no ``__all__``.  Afterwards exactly one
-    public name appears, ``py7zip``, and that one comes from the import
-    system binding an imported submodule onto its parent package rather than
-    from anything the package declares.
+    ``USAGE.md`` documents ``import py7zip`` + ``py7zip.Py7zip()``, so the
+    package root re-exports the public surface (wrapper, safe runtime,
+    typed errors, catalog helpers) and defines ``__all__``.  The re-export
+    is pure: no network, no files, and importing the submodule explicitly
+    afterwards adds no new public names.
     """
     result = _run_probe(cwd=tmp_path)
 
     assert result.returncode == 0, result.stderr
-    assert "TOP_PUBLIC:[]" in result.stdout, result.stdout + result.stderr
-    assert "HAS_WRAPPER_CLASS:False" in result.stdout, result.stdout + result.stderr
-    assert "HAS_ALL:False" in result.stdout, result.stdout + result.stderr
-    assert (
-        "AFTER_PUBLIC:['acquisition', 'platforms', 'py7zip', 'safe']" in result.stdout
-    ), result.stdout + result.stderr
+
+    def public_names(prefix):
+        for line in result.stdout.splitlines():
+            if line.startswith(prefix + ":"):
+                return set(ast.literal_eval(line[len(prefix) + 1 :]))
+        raise AssertionError(f"probe produced no {prefix} line: {result.stdout}")
+
+    assert "HAS_WRAPPER_CLASS:True" in result.stdout, result.stdout
+    assert "HAS_ALL:True" in result.stdout, result.stdout
+
+    top = public_names("TOP_PUBLIC")
+    assert "Py7zip" in top
+    assert "SafePy7zip" in top
+    assert "ArchiveTraversalError" in top
+    assert {"acquisition", "platforms", "py7zip", "safe"} <= top
+
+    assert public_names("AFTER_PUBLIC") == top
 
 
 def test_the_shipped_package_directory_contains_no_binaries():
