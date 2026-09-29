@@ -1,0 +1,34 @@
+# GitForge CI pipeline (primary CI/CD platform; see .github/workflows/ci.yml
+# for the GitHub mirror definition).
+#
+# The test suite is offline by contract: tests/conftest.py fails any test that
+# resolves an address or opens a socket. The pytest lane therefore needs only
+# pytest and the package's runtime dependency (requests) — never network
+# access.
+name: py7zip-ci
+version: "1.0"
+trigger_on:
+  - push
+  - manual
+environment: {}
+jobs:
+  - name: test
+    image: python:3.13
+    timeout: 15m
+    steps:
+      - name: install
+        run: python3 -m pip install --upgrade pytest requests
+      - name: offline-test-suite
+        run: python3 -m pytest tests/ -p no:cacheprovider
+  - name: lint
+    image: python:3.13
+    timeout: 5m
+    needs:
+      - test
+    steps:
+      - name: install
+        run: python3 -m pip install --upgrade ruff
+      - name: ruff-check
+        run: ruff check .
+      - name: ruff-format
+        run: ruff format --check .
