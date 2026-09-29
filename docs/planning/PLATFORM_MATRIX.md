@@ -5,8 +5,9 @@ it claims, and what evidence stands behind each claim. It exists because the
 project's own guidance forbids claiming platform support from source
 inspection alone.
 
-**Status of this document:** written during the Phase 0 baseline. Nothing in
-it is a production-readiness claim.
+**Status of this document:** written during the Phase 0 baseline and updated
+by the 2026-09 qualification slice (see "Update — qualification slice
+2026-09-28" at the end). Nothing in it is a production-readiness claim.
 
 ## How to read the matrix
 
@@ -93,3 +94,62 @@ downloads pointed at by the current URLs return the artifacts they claim;
 and that any platform other than the one row above marked "packaging tested"
 can install the wheel. Those are Phase 2 through Phase 4 exit criteria and
 remain open.
+
+## Update — qualification slice 2026-09-28
+
+The Phase 2–4 revamp landed: platform classification moved to
+`py7zip/platforms.py` (`PlatformInfo.detect` + `ArtifactCatalog`) and archive
+execution to the argument-list runtime in `py7zip/safe.py`. The first
+"binary executed" receipt now exists, and most Phase 0 classifier
+discrepancies are fixed.
+
+### Safe-mode classifier and catalog today
+
+Pinned by `tests/test_platforms.py`:
+
+| Host combination | Classifier + catalog | Tier |
+|------------------|----------------------|------|
+| Linux x86-64 | `pc` / `x64` → `bin/lin/pc/x64/7za` | **Tested** (receipt below) |
+| Linux x86 (i386/i686, 32-bit) | `pc` / `x86` → `bin/lin/pc/x86/7za` | Best effort |
+| Linux armv7l 32-bit | `arm` / `x32` → `bin/lin/arm/x32/7za` | Best effort |
+| Linux aarch64 | `arm` / `x64` → `bin/lin/arm/x64/7za` | Best effort |
+| Windows x86-64 | `pc` / `x64` → `bin/win/pc/x64/7za.exe` | Best effort |
+| Windows x86 32-bit | `pc` / `x86` → `bin/win/pc/x86/7za.exe` | Best effort |
+| Windows arm64 | classifier accepts it; **catalog refuses** (`no published artifact`) | Not supported |
+| macOS arm64 / x86-64 | both → `bin/mac/any/7za` | Best effort |
+| Other OS / machine / pointer width | `UnsupportedPlatformError` at detection | Not supported |
+
+### Phase 0 discrepancy disposition
+
+1. **Linux aarch64 refused** — fixed. `aarch64` is in the ARM machine set and
+   resolves to `bin/lin/arm/x64/7za`.
+2. **Linux i686 / Windows x86 refused** — fixed. Both map to the `pc`/`x86`
+   artifacts that are shipped.
+3. **Windows arm64 refused via case-sensitive compare** — now refused
+   deliberately, by catalog absence, with a typed `UnsupportedPlatformError`;
+   no Windows ARM artifact is published.
+4. **Unsupported OS raised `KeyError`** — fixed. Detection raises
+   `UnsupportedPlatformError` before any lookup.
+5. The legacy classifier behind `Py7zip(legacy=True)` keeps its historical
+   behaviour and remains pinned by `tests/test_characterization_platform.py`.
+
+### Evidence record for this slice
+
+| Field | Value |
+|-------|-------|
+| Branch | `audit/py7zip-qualification-20260909` |
+| Milestone commit | `1bb3ea3` — "test: full branch coverage and strict lint clean" |
+| Host OS | Debian GNU/Linux 13, kernel `6.12.107+deb13-amd64` |
+| Architecture | `x86_64`, `platform.architecture()` == `('64bit', 'ELF')` |
+| Python | CPython 3.13.5 (pytest 9.0.2, coverage 7.13.4, ruff 0.16.2) |
+| Binary provenance | repository artifact `bin/lin/pc/x64/7za`, SHA-256 `12ef12519899ecda8ba59940d7f25a3f4818c97693538d49e894e6b783fb3081`, matching the catalog; banner "7-Zip (z) 24.00 (x64)"; no download |
+| Test command | `python3 -m pytest tests/ --cov=py7zip` |
+| Network isolation | `tests/conftest.py` autouse `offline` fixture turns address resolution and socket connect into failures; no test downloads anything |
+| Result | 182 passed, 0 failed, 0 skipped; 100.0% line and branch coverage (444 stmts, 110 branches, 0 partial) under the `fail_under = 99` gate |
+| Lint | `ruff check .` zero findings; `ruff format .` clean |
+| Executed operations | compress/extract round trips, incremental update with deletion retention, differential capture and two-step restore, timestamped snapshots, zip-slip refusal — all through the real binary |
+
+**Still unproven after this slice:** archive execution on every host other
+than Linux x86-64; downloads against the live network source; the PyPI
+publish path. Those remain the open items in
+[HANDOFF.md](HANDOFF.md).

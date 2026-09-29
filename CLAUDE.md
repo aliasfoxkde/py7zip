@@ -4,41 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-py7zip is a thin, cross-platform Python wrapper around 7-Zip's `7za` command-line binary. The entire runtime is one class, `Py7zip`, in `py7zip/py7zip.py`. It ships no binaries in the wheel: on first instantiation it detects the host platform and downloads a matching `7za` binary from this repo's `main` branch (raw.githubusercontent) into the package directory. Preserve the public `Py7zip` API and the MIT license (see `AGENTS.md`).
+py7zip is a cross-platform Python wrapper around 7-Zip's `7za` command-line binary. The default (safe) runtime detects the host platform on construction but performs **no I/O**: acquiring the binary (`ensure_binary()`) and running archives are explicit operations. The legacy runtime — HTTP version probe on construction, download into the package directory, `shell=True` execution — survives only behind the explicit `legacy=True` flag. Preserve the public `Py7zip` API and the MIT license (see `AGENTS.md`).
 
 ## Critical constraints (from AGENTS.md)
 
-- **Never instantiate `Py7zip` in tests or scripts by default** — the constructor performs a network download and writes a file next to the module. Tests must use deterministic fixtures; network/download/extraction boundaries are only exercised by tests that explicitly opt in and record platform/arch.
-- **Promotion rule:** do not claim platform support from source inspection. Any support claim needs a receipt naming commit, Python version, OS/arch, binary provenance, and test result. `docs/planning/HANDOFF.md` tracks the current qualification boundary (advisory 5/10 — not production-qualified).
+- **Tests must stay offline.** `tests/conftest.py` installs an autouse fixture that turns any address resolution or socket connection into a failure. Never instantiate `Py7zip(legacy=True)` in tests — it performs a network download. The e2e lane runs the bundled `bin/` artifact for the detected host and skips cleanly elsewhere.
+- **Promotion rule:** do not claim platform support from source inspection. Any support claim needs a receipt naming commit, Python version, OS/arch, binary provenance, and test result. `docs/planning/PLATFORM_MATRIX.md` holds the receipts; `docs/planning/HANDOFF.md` tracks the qualification boundary.
+- **Contract discipline:** `docs/planning/COMPATIBILITY.md` is the contract ledger. A behaviour change ships together with the test pinning the new behaviour, and the change is recorded there.
 - Release notes: historical notes live in `docs/CHANGELOG.md`; canonical **future** release notes go in `.github/CHANGELOG.md`.
 - Never commit credentials, generated binaries, caches, or profiling output.
 
 ## Commands
 
 ```bash
-pip install .                                  # install from checkout
-python -m compileall py7zip                    # syntax check (no network, no side effects)
-python -m build                                # build sdist+wheel
-python setup.py sdist bdist_wheel              # legacy build (what SETUP.md/push.bat use)
+python -m pytest tests/ --cov=py7zip   # offline suite + 99% coverage gate (branch measured)
+python -m pytest tests/ -k name        # single test
+ruff check .                           # strict lint, zero findings
+ruff format .                          # formatter
+python -m build && python -m twine check dist/*   # package build
 ```
 
-- **Tests:** there is no test suite yet — `py7zip/tests/debugging.py` is a manual dev script that hits the network. New tests go under `py7zip/tests/` and must run offline; run one with `pytest py7zip/tests -k <name>`. No lint/type config exists for this repo.
-- **Version bump:** edit the first `- X.Y.Z` line in `docs/CHANGELOG.md`. `setup.py:read_version()` parses it, and `.github/workflows/publish.yml` triggers on any push touching that file, publishing to PyPI only when the version is new. Local alternative: `push.bat -m "msg"` (Windows; auto-commits and conditionally publishes via `PYPI_API_KEY`).
+Tool configuration lives in `pyproject.toml` (PEP 621 — package version included).
+
+- **Version bump:** edit `version` in `pyproject.toml`, add the entry to `docs/CHANGELOG.md` and `.github/CHANGELOG.md`. `.github/workflows/publish.yml` publishes only for a release whose tag matches the package version, via PyPI trusted publishing.
 
 ## Architecture
 
-`Py7zip.__init__` (`py7zip/py7zip.py`) does everything:
+Two runtimes share one module layout:
 
-1. **Platform detection** — `platform.system()` → `win`/`lin`/`mac`; `platform.machine()` → `pc` (x86_64/AMD64) or `arm`; `platform.architecture()[0]` → `x86`/`x64`. Unsupported combos raise `NotImplementedError`.
-2. **URL construction** — `{base}/{sys_platform}/{sys_type}/{arch_type}/7za{ext}`, mirroring the checked-in `bin/<os>/<machine>/<arch>/7za[.exe]` tree (note: arch dirs are named `x86`/`x64`, not `32bit`/`64bit`).
-3. **Acquisition** — `setup()` → `download_binary()` streams the binary next to the module file (`os.path.dirname(__file__)`) and chmods 0o755. This runs on every instantiation when the file is absent.
-4. **Execution** — all operations funnel through `wrapper()`, which formats a shell string and runs it with `subprocess.run(shell=True)`. `compress`/`archive`/`backup` and `decompress`/`extract` are thin aliases for `wrapper(method=...)`.
+- `py7zip/platforms.py` — `PlatformInfo.detect()` normalizes the host; `ArtifactCatalog` maps it to a `bin/` artifact with a pinned SHA-256 digest and size. No I/O, side-effect free.
+- `py7zip/acquisition.py` — `ArtifactManager` downloads a catalog artifact into a caller cache dir: checksum + size verification, atomic replace, stale-lock-aware cache lock.
+- `py7zip/safe.py` — `ArchiveRunner`/`SafePy7zip`: argument-list subprocess (no shell), timeout, NUL/bytes argv guards, `ArchiveResult` (argv, returncode, stdout/stderr), typed errors (`ArchiveExecutionError`, `ArchiveTimeoutError`, `ArchiveTraversalError`), and `validate_archive_members` (zip-slip guard on extraction). Backup modes: `full` (`a -y`), `incremental` (`u -y`; deletions retained), `differential` (`-up0q3r2x2y2z0w2!diff.7z -u-`; restore = extract base then diff with `-y`), `snapshot` (timestamped name).
+- `py7zip/py7zip.py` — `Py7zip` compatibility façade. Safe mode delegates every operation to `SafePy7zip`; the five aliases (`compress`/`archive`/`backup`, `decompress`/`extract`) funnel through `wrapper()`, which returns `ArchiveResult` in safe mode. Legacy mode keeps the historical behaviour.
+- `py7zip/__init__.py` — pure re-export of the public API plus `__version__`; importing the package performs no I/O (pinned by `tests/test_import_hygiene.py`).
 
-### Known sharp edges (documented, not yet fixed)
+### Known sharp edges
 
-- `wrapper()` invokes bare `7za` from `PATH` — the binary downloaded to the package dir in step 3 is never actually executed.
-- `decompress`/`extract`/`compress`/`archive`/`backup` accept `options` but pass `options=''` to `wrapper`, silently dropping caller switches.
-- `full`, `incremental`, `differential`, `snapshot` are unimplemented stubs; HANDOFF.md lists "implement or remove" as required work.
-- `py7zip/__init__.py` is empty, so the documented `import py7zip; py7zip.Py7zip()` doesn't work — the working path is `from py7zip import py7zip; py7zip.py7zip.Py7zip()` (see `py7zip/tests/debugging.py`).
+- **Legacy mode is characterised, not fixed**: shell-string execution, unvalidated paths, and `None` returns are pinned by `tests/test_characterization_wrapper.py` as the documented migration contract. Fix bugs in safe mode; change legacy behaviour only with a COMPATIBILITY.md entry.
+- The `-u` update grammar letters are offset from most documentation (`y` = disk-newer); the differential switch `-up0q3r2x2y2z0w2!name` is verified against 7-Zip 24.00 and pinned by e2e tests.
+- 7-Zip stores the source directory itself when compressing a directory path — restored trees appear under `<outdir>/<source-name>/`.
 
-Planned/reported work items (tests, arg-list subprocess boundary, stub resolution, per-platform qualification) are enumerated in `docs/planning/HANDOFF.md` under "Required next work" — check there and `docs/PLANNING.md` before scoping changes.
+Planning status and open work: `docs/planning/HANDOFF.md` and `docs/PLANNING.md`.

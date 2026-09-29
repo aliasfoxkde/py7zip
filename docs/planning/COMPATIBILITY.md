@@ -8,6 +8,10 @@ a recorded decision rather than an accident of refactoring.
 The behaviour described in "current contract" is not asserted from reading
 the source; every line is pinned by a test in `tests/`.
 
+**Note:** the sections below describe the Phase 0 baseline as it was. Changes
+that have since shipped are recorded under "Recorded contract changes" at the
+end of this file; those supersede the corresponding baseline rows.
+
 ## Current contract (Phase 0 baseline)
 
 ### Construction
@@ -94,3 +98,60 @@ features and are removed in Phase 4.
 3. No test may be weakened or deleted to make a contract change pass. The
    characterization tests are updated to the *new* documented contract in the
    same commit as the change, never silently.
+
+## Recorded contract changes
+
+Decisions made after the Phase 0 baseline, each with the commit that carried
+it and the test that pins the new behaviour.
+
+### 1. The safe runtime is the default (constructor `legacy=False`)
+
+`Py7zip(verbose=False, debug=False, *, legacy=False, cache_dir=None,
+binary_path=None, timeout=300.0)`. Without `legacy=True`, construction performs
+platform detection only; `ensure_binary()` acquires a digest-verified artifact
+explicitly; execution goes through the argument-list runtime
+(`py7zip/safe.py`) returning `ArchiveResult` and raising the typed error
+hierarchy. `legacy=True` keeps the Phase 0 behaviour (HTTP version probe on
+construction, download into the package directory, `shell=True` execution,
+`None` returns) as a migration path. Pinned by
+`tests/test_characterization_wrapper.py`, `tests/test_safe_unit.py`, and
+`tests/test_e2e_bundled.py`.
+
+### 2. The five aliases forward `options` again
+
+`compress`, `archive`, `backup`, `decompress`, and `extract` now pass the
+caller's `options` through. In safe mode an opaque string (anything that is not
+the empty default or `None`) is rejected with `TypeError` — individual switch
+arguments are required. The Phase 0 silent-discard behaviour is gone. Pinned by
+`tests/test_e2e_bundled.py::test_compat_api_rejects_string_options`.
+
+### 3. `wrapper` returns a structured result in safe mode
+
+The safe path returns `ArchiveResult` and raises typed errors instead of
+swallowing failures; verbose diagnostics are printed only when requested. The
+legacy path still prints and returns `None`, unchanged.
+
+### 4. `full`, `incremental`, `differential`, `snapshot` are implemented
+
+Instead of being removed, the four backup-family methods are implemented over
+the argv runtime and covered end to end (deletion retention for incremental,
+base-untouched plus two-step restore for differential, name stamping for
+snapshot). Pinned by `tests/test_e2e_bundled.py::TestBackupModes` and
+`tests/test_safe_unit.py::TestBackupModeConstruction`. The characterization
+pin that documented the no-op stubs was replaced in the same commits that
+implemented them, per rule 3.
+
+### 5. The package root re-exports the public API (additive)
+
+`import py7zip; py7zip.Py7zip()` now works: `py7zip/__init__.py` re-exports
+`Py7zip`, `SafePy7zip`, `ArchiveResult`, the error hierarchy, and the
+platform/acquisition types. This is the additive change the migration map
+anticipated; `from py7zip.py7zip import Py7zip` is unchanged. Pinned by
+`tests/test_import_hygiene.py`.
+
+### 6. `requests` remains an install dependency
+
+The migration map's "removed" row was not taken. Legacy mode still probes
+`docs/CHANGELOG.md` over HTTPS, so `requests` stays a runtime dependency for
+that path. Removing it requires deprecating the legacy version probe first.
+

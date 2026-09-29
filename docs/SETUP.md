@@ -1,46 +1,57 @@
 # SETUP
-This document outlines the steps needed to contribute to this project. A workflow is 
-already established and several steps automated, and while these steps can still be 
-done manually, for the purpose of consistancy and ease please use the outlined best 
-practices found here.
+This document outlines the steps needed to contribute to this project.
 
 ## Prerequisites
+- Python 3.9+ (3.13 used for the current qualification receipts)
+- A checkout of this repository
 
-### PyPi Setup
-These steps only need to be taken if you have access to the root PyPi package library
-and account.
+## Development workflow
 
-- Steps
-  - Login to PyPi and create an API key
-  - Create an environment variable called PYPI_API_KEY
-  - Copy the API key into the User Environment variable
-  
-## Publishing Changes
-The "Push.bat" script is currently set to dynamically commit changes, include 
-an auto-commit message if none is provided, build and publish updates made the 
-PyPi packages automatically based on the PYPI_API_KEY, and cleanup. The build
-and PyPi publishing will only occur on version change, which is dynamically
-reflected by simply updating the CHANGELOG.md file. Standard non-version commits
-will be ignored.
+```sh
+# Install in editable form with test tooling
+python -m pip install -e . pytest coverage ruff
 
-`push -m "{Message}"`
+# Run the offline test suite (no binary download, no network; the suite
+# fails on any socket use). The e2e lane runs the bundled bin/ artifact
+# for the detected host and skips cleanly where none exists.
+python -m pytest tests/ --cov=py7zip
 
-### Manual Publishing Steps
-The following commands are dynamically ran by the "push.bat" file, in the case 
-the repo version is higher, and the PYPI_API_KEY envernmnet variable is set, 
-then publish changes to PyPi project. However, this is how it would be done
-manually if needed.
-
-```pycon
-    # Builds Python Packages
-    python setup.py sdist bdist_wheel
-	
-	# Uploads Python Packages to PyPi
-	twine upload -u api -p %PYPI_API_KEY% dist/*
+# Lint and format (zero-findings gate)
+ruff check .
+ruff format --check .
 ```
 
-### Get py7zip Versions
-- `pip show py7zip`
+The test suite must stay offline: `tests/conftest.py` installs an autouse
+fixture that turns any address resolution or socket connection into a test
+failure. Never commit credentials, generated binaries, caches, or profiling
+output.
 
-## Versioning
-Versioning changes are based on {Major}.{Minor}.{Bug}.
+## Building and checking the package
+
+```sh
+python -m pip install build twine
+python -m build
+python -m twine check dist/*
+```
+
+Packaging is PEP 621: package metadata and the version live in
+`pyproject.toml`.
+
+## Versioning and release
+
+1. Bump `version` in `pyproject.toml`.
+2. Add the matching entry at the top of `docs/CHANGELOG.md` (historical) and
+   a release note under `.github/CHANGELOG.md` (canonical for future
+   releases).
+3. Tag the commit with the matching `vX.Y.Z` tag and publish a GitHub/GitForge
+   release.
+
+The publish workflow runs only for a published release whose tag matches the
+package version and authenticates to PyPI through trusted publishing — there
+is no API key to configure.
+
+## Legacy publishing (Windows)
+
+`push.bat` predates the PEP 621 migration and still references
+`setup.py`/twine; treat it as unmaintained until it is either updated or
+replaced by a cross-platform script (see `docs/PLANNING.md`).

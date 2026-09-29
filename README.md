@@ -2,8 +2,13 @@
 An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. 
 Unlike other libraries, this one fully supports 7zip natively, is easy to setup/install, and is "pythonic" with 
 the intent to be used in code and scripts, not through the terminal. Additionally, you CAN use the '7za' binaries
-directly as the specific binaries for your system will be installed automatically and you can therefor use it from
+directly as the specific binaries for your system will be installed automatically and you can therefore use it from
 the terminal/command line as you normally would. This also lends to making cross platform apps using this module.
+
+Acquired binaries are verified against pinned SHA-256 digests before use, and all
+archive operations run the binary through an argument-list boundary (no shell)
+with member validation on extraction. See [docs/USAGE.md](docs/USAGE.md) and
+[docs/planning/COMPATIBILITY.md](docs/planning/COMPATIBILITY.md).
 
 ## Why Choose py7zip?
 - **Seamless Integration**: Unlike other libraries, py7zip seamlessly integrates 7zip functionality directly into Python, 
@@ -47,7 +52,7 @@ the terminal/command line as you normally would. This also lends to making cross
 - **NOTE**: Documentation is broken down into parts and can be found in ./docs
 
 ## Platforms Supported and Tested:
-- [ ] Linux x86-64 (64-bit)
+- [x] Linux x86-64 (64-bit)
 - [ ] Linux x86 (32-bit)
 - [ ] Linux arm64 (64-bit)
 - [ ] Linux arm (32-bit)
@@ -55,6 +60,12 @@ the terminal/command line as you normally would. This also lends to making cross
 - [x] Windows x64 (64-bit)
 - [ ] Windows x86 (32-bit )
 - [ ] Windows arm64 (64-bit)
+
+Per the repository promotion rule, a checked box means the bundled 7za artifact
+for that host was executed by the test suite on that platform; claims are
+receipted in [docs/planning/PLATFORM_MATRIX.md](docs/planning/PLATFORM_MATRIX.md).
+Every host above has a checksummed artifact in `bin/`; unchecked boxes mean no
+execution receipt exists yet, not that the artifact is absent.
 
 ### Notes
 - If you install this package using `git clone`, then all binary packages will be included. 

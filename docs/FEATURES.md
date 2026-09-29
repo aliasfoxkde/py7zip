@@ -2,13 +2,24 @@
 Reference documentation that details the features of this module as well as 7zip.
 
 ## Py7zip
-- Simplified "point-in-time" backups and full/incremental schemas using snapshots
-- Simplifies lessor known features of 7zip. Such as full, differential, incremental backups, etc.
-- Comprehensive documentation through online wiki pages (using standard markdown).
+- Safe runtime by default: platform detection on construction, with binary
+  acquisition, verification, and execution as explicit operations.
+- Checksum-verified binary acquisition: every downloaded artifact is checked
+  against a pinned SHA-256 digest and size before it is used.
+- Argument-list execution boundary (no shell), with timeouts and typed errors:
+  `ArchiveExecutionError`, `ArchiveTimeoutError`, `ArchiveTraversalError`,
+  `ArtifactAcquisitionError`, `ArtifactIntegrityError`,
+  `ArtifactLockTimeoutError`, `UnsupportedPlatformError`.
+- Extraction validates archive members and refuses paths that would escape the
+  destination directory (zip-slip protection).
+- Full / incremental / differential / snapshot backup modes over the same
+  runtime, with the differential restore procedure documented in USAGE.md.
+- Structured `ArchiveResult` carrying the exact argv, exit code, and captured
+  output, so failures are observable instead of silent.
 - Cross platform support for Windows, Linux, and Mac.
-- Native "Pythonic" logic removes need for additional libraries or CLI executing.
-- Uses '7za' compiled library for compatability, Performance, and Reliability.
 - Lightweight, being under a few megabytes in size (varies by platform).
+- In-repo reference documentation under `docs/` (usage, compatibility, platform
+  matrix, planning).
 
 ## 7-zip Features (Source: https://www.7-zip.org):
 - **License**: "You can use 7-Zip on any computer, including a computer in a commercial organization. 
@@ -25,4 +36,4 @@ Reference documentation that details the features of this module as well as 7zip
 - Strong AES-256 encryption in 7z and ZIP formats
 - Self-extracting capability for 7z format
 - Powerful command line version
-- Localizations for 87 languages  (not currently implimented)
+- Localizations for 87 languages  (not currently implemented)
