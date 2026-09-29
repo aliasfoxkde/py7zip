@@ -51,9 +51,7 @@ def test_detect_refuses_unknown_hosts(system, machine, bits):
         ("Darwin", "arm64", 64, "bin/mac/any/7za"),
     ],
 )
-def test_catalog_resolves_nonempty_published_artifacts(
-    system, machine, bits, expected
-):
+def test_catalog_resolves_nonempty_published_artifacts(system, machine, bits, expected):
     spec = ArtifactCatalog.resolve(
         PlatformInfo.detect(system=system, machine=machine, bits=bits)
     )

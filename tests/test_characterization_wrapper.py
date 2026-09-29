@@ -340,9 +340,11 @@ def test_snapshot_family_methods_execute_via_the_argv_runtime(
         command = result.command
         archive = command[2]
         assert command[:2] == ("/resolved/7za", "a")
-        assert archive.startswith("dst.") and archive.endswith(".7z")
+        assert archive.startswith("dst.")
+        assert archive.endswith(".7z")
         stamp = archive[len("dst.") : -len(".7z")]
-        assert len(stamp) == 15 and stamp[8] == "T"
+        assert len(stamp) == 15
+        assert stamp[8] == "T"
     else:
         assert result.command == expected[name]
     assert len(recorded) == 1
@@ -365,7 +367,9 @@ def test_snapshot_family_methods_keep_the_shared_signature(name):
         "dst",
         "options",
     ]
-    assert all(parameter.kind is inspect.Parameter.KEYWORD_ONLY for parameter in parameters[4:])
+    assert all(
+        parameter.kind is inspect.Parameter.KEYWORD_ONLY for parameter in parameters[4:]
+    )
 
 
 def test_every_public_alias_funnels_through_wrapper(make_wrapper, monkeypatch):

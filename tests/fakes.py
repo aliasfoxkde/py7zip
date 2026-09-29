@@ -17,14 +17,23 @@ characterised against.
 from __future__ import annotations
 
 import subprocess
-from collections import namedtuple
 from types import SimpleNamespace
+from typing import NamedTuple
+
+import requests
 
 import py7zip.py7zip as py7zip_module
 
-#: ``platform.uname()`` returns a namedtuple and the wrapper stores it
-#: verbatim as ``Py7zip.debug_info``, so the fake reproduces the same fields.
-UnameResult = namedtuple("uname_result", "system node release version machine")
+
+class UnameResult(NamedTuple):
+    """The ``platform.uname()`` shape, which the wrapper stores verbatim
+    as ``Py7zip.debug_info``."""
+
+    system: str
+    node: str
+    release: str
+    version: str
+    machine: str
 
 
 class FakePlatform:
@@ -73,8 +82,6 @@ def make_response(
     wrapper's ``raise_for_status()`` and ``response.text`` calls run through
     the actual requests implementation rather than a hand-rolled shim.
     """
-    import requests
-
     response = requests.Response()
     response.status_code = status
     response.url = url
@@ -96,8 +103,6 @@ class FakeRequests:
     """
 
     def __getattr__(self, name):
-        import requests
-
         return getattr(requests, name)
 
     def __init__(self, responder=None):
@@ -107,8 +112,6 @@ class FakeRequests:
 
     @staticmethod
     def offline(url):
-        import requests
-
         raise requests.ConnectionError(
             f"offline characterization run: refusing to fetch {url}"
         )
@@ -135,8 +138,6 @@ class FakeUrllibRequest:
         self.opened = []
 
     def urlopen(self, url, *args, **kwargs):
-        import urllib.error
-
         self.opened.append(url)
         if isinstance(self.payload, Exception):
             raise self.payload

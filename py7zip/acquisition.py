@@ -22,7 +22,7 @@ class ArtifactIntegrityError(ArtifactAcquisitionError):
     """Raised when downloaded or cached bytes do not match the catalog."""
 
 
-class ArtifactLockTimeout(ArtifactAcquisitionError):
+class ArtifactLockTimeoutError(ArtifactAcquisitionError):
     """Raised when another process holds the cache lock too long."""
 
 
@@ -135,7 +135,9 @@ class ArtifactManager:
             except FileExistsError:
                 self._remove_stale_lock(lock_path)
                 if time.monotonic() >= deadline:
-                    raise ArtifactLockTimeout(f"timed out waiting for {lock_path}")
+                    raise ArtifactLockTimeoutError(
+                        f"timed out waiting for {lock_path}"
+                    ) from None
                 time.sleep(0.05)
         try:
             yield

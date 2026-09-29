@@ -20,67 +20,67 @@ from tests import fakes
 RESOLVED_HOSTS = [
     (
         "linux x86-64",
-        dict(system="Linux", machine="x86_64", architecture=("64bit", "ELF")),
-        dict(
-            sys_type="pc",
-            arch_type="x64",
-            sys_platform="lin",
-            extension="",
-            url_suffix="bin//lin/pc/x64/7za",
-            binary_name="7za",
-        ),
+        {"system": "Linux", "machine": "x86_64", "architecture": ("64bit", "ELF")},
+        {
+            "sys_type": "pc",
+            "arch_type": "x64",
+            "sys_platform": "lin",
+            "extension": "",
+            "url_suffix": "bin//lin/pc/x64/7za",
+            "binary_name": "7za",
+        },
     ),
     (
         "linux armv7l 32-bit",
-        dict(system="Linux", machine="armv7l", architecture=("32bit", "ELF")),
-        dict(
-            sys_type="arm",
-            arch_type="x86",
-            sys_platform="lin",
-            extension="",
-            url_suffix="bin//lin/arm/x86/7za",
-            binary_name="7za",
-        ),
+        {"system": "Linux", "machine": "armv7l", "architecture": ("32bit", "ELF")},
+        {
+            "sys_type": "arm",
+            "arch_type": "x86",
+            "sys_platform": "lin",
+            "extension": "",
+            "url_suffix": "bin//lin/arm/x86/7za",
+            "binary_name": "7za",
+        },
     ),
     (
         "windows x86-64",
-        dict(
-            system="Windows",
-            machine="AMD64",
-            architecture=("64bit", "WindowsPE"),
-        ),
-        dict(
-            sys_type="pc",
-            arch_type="x64",
-            sys_platform="win",
-            extension=".exe",
-            url_suffix="bin//win/pc/x64/7za.exe",
-            binary_name="7za.exe",
-        ),
+        {
+            "system": "Windows",
+            "machine": "AMD64",
+            "architecture": ("64bit", "WindowsPE"),
+        },
+        {
+            "sys_type": "pc",
+            "arch_type": "x64",
+            "sys_platform": "win",
+            "extension": ".exe",
+            "url_suffix": "bin//win/pc/x64/7za.exe",
+            "binary_name": "7za.exe",
+        },
     ),
     (
         "macos x86-64",
-        dict(system="Darwin", machine="x86_64", architecture=("64bit", "")),
-        dict(
-            sys_type="pc",
-            arch_type="x64",
-            sys_platform="mac",
-            extension="",
-            url_suffix="bin//mac/pc/x64/7za",
-            binary_name="7za",
-        ),
+        {"system": "Darwin", "machine": "x86_64", "architecture": ("64bit", "")},
+        {
+            "sys_type": "pc",
+            "arch_type": "x64",
+            "sys_platform": "mac",
+            "extension": "",
+            "url_suffix": "bin//mac/pc/x64/7za",
+            "binary_name": "7za",
+        },
     ),
     (
         "macos arm64",
-        dict(system="Darwin", machine="arm64", architecture=("64bit", "")),
-        dict(
-            sys_type="arm",
-            arch_type="x64",
-            sys_platform="mac",
-            extension="",
-            url_suffix="bin//mac/arm/x64/7za",
-            binary_name="7za",
-        ),
+        {"system": "Darwin", "machine": "arm64", "architecture": ("64bit", "")},
+        {
+            "sys_type": "arm",
+            "arch_type": "x64",
+            "sys_platform": "mac",
+            "extension": "",
+            "url_suffix": "bin//mac/arm/x64/7za",
+            "binary_name": "7za",
+        },
     ),
 ]
 
@@ -90,31 +90,31 @@ RESOLVED_HOSTS = [
 REJECTED_HOSTS = [
     (
         "linux aarch64 is not matched because 'arm' is not a substring",
-        dict(system="Linux", machine="aarch64", architecture=("64bit", "ELF")),
+        {"system": "Linux", "machine": "aarch64", "architecture": ("64bit", "ELF")},
         NotImplementedError,
     ),
     (
         "linux i686 32-bit has a shipped binary but no classifier",
-        dict(system="Linux", machine="i686", architecture=("32bit", "ELF")),
+        {"system": "Linux", "machine": "i686", "architecture": ("32bit", "ELF")},
         NotImplementedError,
     ),
     (
         "windows arm64 machine name is matched case-sensitively",
-        dict(
-            system="Windows",
-            machine="ARM64",
-            architecture=("64bit", "WindowsPE"),
-        ),
+        {
+            "system": "Windows",
+            "machine": "ARM64",
+            "architecture": ("64bit", "WindowsPE"),
+        },
         NotImplementedError,
     ),
     (
         "linux riscv64 is unclassified",
-        dict(system="Linux", machine="riscv64", architecture=("64bit", "ELF")),
+        {"system": "Linux", "machine": "riscv64", "architecture": ("64bit", "ELF")},
         NotImplementedError,
     ),
     (
         "linux ppc64le is unclassified",
-        dict(system="Linux", machine="ppc64le", architecture=("64bit", "ELF")),
+        {"system": "Linux", "machine": "ppc64le", "architecture": ("64bit", "ELF")},
         NotImplementedError,
     ),
 ]
@@ -125,13 +125,13 @@ REJECTED_HOSTS = [
 WRONG_EXCEPTION_HOSTS = [
     (
         "unsupported operating system raises KeyError, not NotImplementedError",
-        dict(system="SunOS", machine="x86_64", architecture=("64bit", "ELF")),
+        {"system": "SunOS", "machine": "x86_64", "architecture": ("64bit", "ELF")},
         KeyError,
         "sunos",
     ),
     (
         "unrecognised pointer width raises KeyError",
-        dict(system="Linux", machine="x86_64", architecture=("128bit", "ELF")),
+        {"system": "Linux", "machine": "x86_64", "architecture": ("128bit", "ELF")},
         KeyError,
         "128bit",
     ),
@@ -171,7 +171,9 @@ def test_unclassified_machine_is_refused(label, kwargs, exception, make_wrapper)
     WRONG_EXCEPTION_HOSTS,
     ids=[entry[0] for entry in WRONG_EXCEPTION_HOSTS],
 )
-def test_unsupported_host_surfaces_as_keyerror(label, kwargs, exception, missing_key, make_wrapper):
+def test_unsupported_host_surfaces_as_keyerror(
+    label, kwargs, exception, missing_key, make_wrapper
+):
     with pytest.raises(exception) as excinfo:
         make_wrapper(**kwargs)
 

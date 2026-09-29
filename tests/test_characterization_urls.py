@@ -89,9 +89,7 @@ def test_binary_url_contains_a_doubled_path_separator(make_wrapper):
 def test_binary_url_per_platform(
     system, machine, architecture, expected_url, make_wrapper
 ):
-    wrapper = make_wrapper(
-        system=system, machine=machine, architecture=architecture
-    )
+    wrapper = make_wrapper(system=system, machine=machine, architecture=architecture)
 
     assert wrapper.get_binary_url() == expected_url
     assert wrapper.url == expected_url

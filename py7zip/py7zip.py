@@ -69,7 +69,10 @@ class Py7zip:
             self.platform
         ]
         self.extension = {"windows": ".exe", "linux": "", "darwin": ""}[self.platform]
-        self.url = f"{self.base_bin_url}/{self.sys_platform}/{self.sys_type}/{self.arch_type}/7za{self.extension}"
+        self.url = (
+            f"{self.base_bin_url}/{self.sys_platform}/"
+            f"{self.sys_type}/{self.arch_type}/7za{self.extension}"
+        )
         self.binary_path = os.path.join(
             os.path.dirname(__file__), f"7za{self.extension}"
         )
@@ -87,7 +90,10 @@ class Py7zip:
         """Construct the URL to fetch CHANGELOG.md and find the version number."""
         if not self.legacy:
             return self._metadata_version()
-        changelog_url = f"{self.raw_usercontent}/{self.username}/{self.app_name}/main/docs/CHANGELOG.md"
+        changelog_url = (
+            f"{self.raw_usercontent}/{self.username}/{self.app_name}"
+            "/main/docs/CHANGELOG.md"
+        )
 
         try:
             # Fetch the content of the CHANGELOG.md file from the URL
@@ -144,6 +150,7 @@ class Py7zip:
         ):
             out_file.write(response.read())
             os.chmod(self.binary_path, 0o755)
+        return None
 
     def get_binary_url(self):
         """Dynamically gets the URL of the required system binary."""
@@ -247,9 +254,7 @@ class Py7zip:
 
     def full(self, src, dst, options=""):
         """Create a complete archive of ``src`` at ``dst``."""
-        return self._backup_executor().full(
-            src, dst, self._normalize_options(options)
-        )
+        return self._backup_executor().full(src, dst, self._normalize_options(options))
 
     def incremental(self, src, dst, options=""):
         """Update ``dst`` in place so every file matches its newest copy.

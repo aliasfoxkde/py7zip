@@ -43,3 +43,57 @@ minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-q --strict-markers --strict-config"
 filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["py7zip"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 99
+show_missing = true
+precision = 1
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+extend-exclude = ["img", "bin"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # bugbear
+    "A",      # builtins shadowing
+    "C4",     # comprehensions
+    "DTZ",    # naive datetimes
+    "T10",    # no breakpoint()/pdb in library code
+    "EM",     # exception message hygiene
+    "ICN",    # import conventions
+    "PYI",    # stub files
+    "PT",     # pytest style
+    "RET",    # return hygiene
+    "SIM",    # simplification
+    "TID",    # tidy imports
+    "PL",     # pylint
+    "RUF",    # ruff-specific
+]
+ignore = [
+    "EM101",  # user-facing messages are literal strings by design
+    "EM102",
+    "PLR0913", # wrapper() keeps its historical signature
+    "PLR2004", # numeric comparisons in protocol parsing are intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["SIM117"]  # nested with in zipfile/urlopen patterns reads clearer
+"py7zip/py7zip.py" = [
+    "PLW0603",  # no global statements remain; reserved
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

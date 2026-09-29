@@ -21,12 +21,16 @@ binary installed.  Rather than trusting that, the fixtures below enforce it:
 from __future__ import annotations
 
 import os
+import shutil
 import socket
+import stat
 from pathlib import Path
 
 import pytest
 
 import py7zip.py7zip as py7zip_module
+from py7zip.platforms import ArtifactCatalog, PlatformInfo
+from py7zip.safe import ArchiveExecutionError, SafePy7zip
 from tests import fakes
 
 PACKAGE_DIR = Path(py7zip_module.__file__).resolve().parent
@@ -49,7 +53,6 @@ def offline(monkeypatch):
     monkeypatch.setattr(socket, "gethostbyaddr", _deny_network)
     monkeypatch.setattr(socket.socket, "connect", _deny_network)
     monkeypatch.setattr(socket.socket, "connect_ex", _deny_network)
-    yield
 
 
 @pytest.fixture
@@ -98,6 +101,7 @@ def make_wrapper(monkeypatch):
         system="Linux",
         machine="x86_64",
         architecture=("64bit", "ELF"),
+        *,
         binary_present=True,
         stub_setup=False,
         requests_responder=None,
@@ -120,3 +124,37 @@ def make_wrapper(monkeypatch):
         return wrapper
 
     return factory
+
+
+@pytest.fixture(scope="session")
+def bundled_binary(tmp_path_factory) -> Path:
+    """A runnable copy of the bundled 7-Zip artifact for this exact host.
+
+    This is the offline stand-in for a download: the artifact is the one
+    already checked into ``bin/``, copied to a temporary directory and
+    verified executable.  Lanes that need it skip cleanly elsewhere.
+    """
+    info = PlatformInfo.detect()
+    try:
+        spec = ArtifactCatalog.resolve(info)
+    except Exception as exc:  # any refusal skips the lane
+        pytest.skip(f"no bundled artifact for this host: {exc}")
+    source = REPO_ROOT / spec.relative_path
+    if not source.is_file() or not source.stat().st_mode & stat.S_IXUSR:
+        pytest.skip(f"bundled artifact not runnable here: {source}")
+    binary = tmp_path_factory.mktemp("binary") / spec.executable_name
+    shutil.copy2(source, binary)
+    os.chmod(binary, 0o755)
+    try:
+        SafePy7zip(binary_path=binary, timeout=60.0).run(
+            "compress", __file__, binary.with_suffix(".probe.7z")
+        )
+    except (ArchiveExecutionError, OSError) as exc:
+        pytest.skip(f"bundled artifact cannot execute on this host: {exc}")
+    return binary
+
+
+@pytest.fixture
+def safe(bundled_binary, tmp_path) -> SafePy7zip:
+    """SafePy7zip bound to the bundled binary and a per-test cache dir."""
+    return SafePy7zip(binary_path=bundled_binary, cache_dir=tmp_path, timeout=60.0)

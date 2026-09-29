@@ -11,7 +11,7 @@ from importlib.metadata import version as _package_version
 from .acquisition import (
     ArtifactAcquisitionError,
     ArtifactIntegrityError,
-    ArtifactLockTimeout,
+    ArtifactLockTimeoutError,
     ArtifactManager,
 )
 from .platforms import (
@@ -45,7 +45,7 @@ __all__ = [
     "ArtifactAcquisitionError",
     "ArtifactCatalog",
     "ArtifactIntegrityError",
-    "ArtifactLockTimeout",
+    "ArtifactLockTimeoutError",
     "ArtifactManager",
     "ArtifactSpec",
     "PlatformInfo",

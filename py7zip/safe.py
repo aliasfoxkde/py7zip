@@ -267,14 +267,16 @@ class SafePy7zip:
         ``destination`` is the existing base archive and is left untouched.
         The diff archive receives new files, files whose disk copy is newer
         or otherwise diverges, and anti (tombstone) entries for deletions.
-        Restoring is extracting the base archive and then the diff over it.
-        The diff must be 7z format because anti entries are a 7z feature;
-        ``diff_path`` defaults to ``<destination>.diff.7z``.
+        Restoring means extracting the base archive and then the diff over
+        it with overwrite enabled, e.g. ``decompress(diff, target,
+        options=("-y",))``.  The diff must be 7z format because anti entries
+        are a 7z feature; ``diff_path`` defaults to a sibling of the base
+        named ``<base-stem>.diff.7z``.
         """
         diff = (
             Path(diff_path)
             if diff_path is not None
-            else Path(f"{os.fspath(destination)}.diff.7z")
+            else Path(os.fspath(destination)).with_suffix(".diff.7z")
         )
         if diff.suffix.lower() != ".7z":
             raise ValueError("differential archives must use the .7z format")
@@ -298,9 +300,12 @@ class SafePy7zip:
         ``backups/site.20260928T221500.7z``.  ``timestamp`` overrides the
         stamp for deterministic runs.
         """
-        stamp = timestamp if timestamp is not None else datetime.now().strftime(
-            "%Y%m%dT%H%M%S"
-        )
+        if timestamp is not None:
+            stamp = timestamp
+        else:
+            # Naive local time is deliberate: the stamp names a wall-clock
+            # snapshot on the machine taking the backup, not an instant.
+            stamp = datetime.now().strftime("%Y%m%dT%H%M%S")  # noqa: DTZ005
         target = Path(destination)
         stamped = target.with_name(f"{target.stem}.{stamp}.7z")
         return self.run("compress", source, stamped, ("-y", *options))

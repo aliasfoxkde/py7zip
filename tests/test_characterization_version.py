@@ -9,11 +9,9 @@ rather than a silent one.
 
 from __future__ import annotations
 
-import pytest
-
 import requests
 
-from tests.fakes import FakeRequests, make_response
+from tests.fakes import make_response
 
 CHANGELOG_URL = (
     "https://raw.githubusercontent.com/aliasfoxkde/py7zip/main/docs/CHANGELOG.md"
@@ -87,7 +85,8 @@ def test_version_falls_back_when_the_changelog_is_unparseable(make_wrapper):
 
 
 def test_version_falls_back_on_an_http_error_status(make_wrapper):
-    wrapper = make_wrapper(requests_responder=_responder_for(CHANGELOG_BODY, status=404))
+    responder = _responder_for(CHANGELOG_BODY, status=404)
+    wrapper = make_wrapper(requests_responder=responder)
 
     assert wrapper.__version__ == "0.0.0"
 

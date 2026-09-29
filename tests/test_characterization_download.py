@@ -17,10 +17,10 @@ from __future__ import annotations
 import stat
 import urllib.error
 
+import pytest
+
 import py7zip.py7zip as py7zip_module
 from tests.fakes import FakeUrllibRequest
-
-import pytest
 
 FAKE_BINARY = b"#!/bin/sh\nprintf 'characterization 7za\\n'\n"
 
@@ -30,9 +30,7 @@ def staged_package_dir(tmp_path, monkeypatch):
     """Point the wrapper at a throwaway package directory."""
     package_dir = tmp_path / "site-packages" / "py7zip"
     package_dir.mkdir(parents=True)
-    monkeypatch.setattr(
-        py7zip_module, "__file__", str(package_dir / "py7zip.py")
-    )
+    monkeypatch.setattr(py7zip_module, "__file__", str(package_dir / "py7zip.py"))
     return package_dir
 
 
@@ -99,9 +97,7 @@ def test_download_binary_writes_and_marks_executable(
     assert stat.S_IMODE(installed.stat().st_mode) == 0o755
 
 
-def test_download_binary_creates_missing_parent_directories(
-    make_wrapper, tmp_path
-):
+def test_download_binary_creates_missing_parent_directories(make_wrapper, tmp_path):
     wrapper = make_wrapper()
     source = tmp_path / "upstream-7za"
     source.write_bytes(FAKE_BINARY)
@@ -153,9 +149,9 @@ def test_setup_swallows_a_download_failure_and_prints_it(
     make_wrapper, staged_package_dir, monkeypatch, capsys
 ):
     """A failed download is printed and construction still succeeds."""
-    FakeUrllibRequest(
-        payload=urllib.error.URLError("characterization outage")
-    ).install(monkeypatch)
+    FakeUrllibRequest(payload=urllib.error.URLError("characterization outage")).install(
+        monkeypatch
+    )
 
     wrapper = make_wrapper(binary_present=False)
 
