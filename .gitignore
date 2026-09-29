@@ -32,3 +32,9 @@ temp/
 *.egg-info/
 *7za*
 *.zip
+# Coverage / tooling artifacts
+.coverage
+.coverage.*
+htmlcov/
+.ruff_cache/
+.pytest_cache/
