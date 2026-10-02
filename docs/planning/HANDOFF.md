@@ -57,8 +57,12 @@ the PyPI publish path.
    supported features.~~ Done: implemented and documented in USAGE.md.
 4. Validate Linux (non-x86-64), macOS, and Windows from clean environments
    with provenance checks for acquired binaries. **Open.**
-5. Release automation: validate the CI/publish workflow through GitForge (the
-   primary CI platform) before cutting a release. **Open.**
+5. ~~Release automation: validate the CI/publish workflow through GitForge (the
+   primary CI platform) before cutting a release.~~ **Done 2026-10-02** for the
+   CI lanes: `.gitforge.yml` is registered (pipeline `py7zip-ci`) and run
+   `bb76b684` graded commit `3252d397` green (`test` + `lint`, exit-code
+   receipts). The PyPI publish lane remains open (see Phase P3 in
+   `QUALIFICATION_PLAN_2026-09-29.md`).
 
 ## Promotion gate
 

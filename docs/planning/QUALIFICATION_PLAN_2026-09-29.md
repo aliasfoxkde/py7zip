@@ -38,6 +38,14 @@ The scan reported 418 findings; every medium-or-higher one was inspected:
 
 ## Findings and gaps (the honest list)
 
+> **Update 2026-10-02:** findings 1–2 are resolved. The GitForge deployment
+> was upgraded to `gitforge-74f2226d-20261001` (v0.6.12), which registered
+> the definition via `POST /api/pipelines` (201, pipeline `py7zip-ci`) and
+> runs jobs on a local docker runner. First green run: `bb76b684` — commit
+> `3252d397` (the 0.8.0 release commit), jobs `test` and `lint` both
+> `succeeded` with exit-code receipts, 2026-10-02T21:21:31Z → 21:37:03Z.
+> The legacy findings below are retained as the historical record.
+
 1. **GitForge pipeline execution is blocked by platform version skew, not by
    this repository.** The running release (`gitforge-989b33e2-20260925`)
    answers `POST /api/pipelines` with 405 and its list handler drops the
@@ -88,10 +96,12 @@ The scan reported 418 findings; every medium-or-higher one was inspected:
    those receipts.
 
 ### Phase P2 — primary CI platform repair
-1. Update the GitForge deployment so `POST /api/pipelines` works; re-register
-   `mkinney/py7zip` from `.gitforge.yml`.
-2. Bring one runner online and prove the `test` and `lint` jobs execute on a
-   push.
+1. ~~Update the GitForge deployment so `POST /api/pipelines` works; re-register
+   `mkinney/py7zip` from `.gitforge.yml`.~~ Done 2026-10-02: registered as
+   pipeline `py7zip-ci` (`d0537979`), run `bb76b684` green.
+2. ~~Bring one runner online and prove the `test` and `lint` jobs execute on a
+   push.~~ Done 2026-10-02: the local docker runner executes jobs; both lanes
+   have exit-code receipts.
 3. Add a `python-test` profile to the harness-jobs registry so heavyweight
    Python validation goes through the approved queue.
 
