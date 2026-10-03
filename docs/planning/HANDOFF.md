@@ -98,10 +98,18 @@ source, and are fixed with pinning tests on the same commits.
 
 Suite after both fixes: **206 passed**, 100.0% line and branch coverage
 (552 statements, 132 branches), `ruff check .` and `ruff format --check .`
-clean. Platform-side residual (not py7zip): GitForge's sqlite write
-contention defers push-triggered CI inserts and the run trigger answers
-`queued` with no run id while contention persists, so the GitForge CI run for
-`13fe83e` was pending at handoff time; GitHub received the same commits.
+clean. Platform-side residual (not py7zip): GitForge's CI lane was degraded
+for all repos during this session — sqlite write contention (30-second
+`UPDATE runners` statements) made the run trigger answer `queued` with a null
+run id, and after service restarts the orchestrator's event bus had zero
+receivers, turning every trigger into a 503 `event_publish_failed: channel
+closed` (`InMemoryEventBus.publish` fails only when no subscriber exists),
+with the scheduler additionally deciding jobs mid-execution (lease
+invalidation). The 0.8.0-era run for `ac2b034` has `test` green (`7d26a3c6`)
+with `lint` wedged pending; a bounded retry loop re-attempts the trigger for
+`5a60a7c`. GitHub received every commit and the `v0.9.0` release with
+artifacts attached; a GitForge CI-green receipt for 0.9.0 remains open and
+belongs to the platform-repair campaign, not this repository.
 
 ## Promotion gate
 
