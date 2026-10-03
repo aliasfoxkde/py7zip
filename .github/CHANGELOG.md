@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0 - Command-Line Interface
+
+- Added a `py7zip` console script and `python -m py7zip` entrypoint exposing
+  the safe runtime as eight subcommands: `download`, `compress`, `full`,
+  `incremental`, `extract`, `list`, `differential`, and `snapshot`.
+- Defined a shell-readable exit-code contract: 0 success, 1 execution or
+  acquisition failure, 2 usage, 3 timeout, 4 refused unsafe archive members,
+  5 unsupported platform.
+- Added `SafePy7zip.list_entries()` and the shared naming helpers
+  `snapshot_name()` / `differential_name()` so the CLI and the runtime derive
+  identical archive names.
+- Common flags: `--binary-path`, `--cache-dir`, `--timeout`, and repeatable
+  `-o/--option` for extra 7-Zip switches.
+- Offline suite: 200 tests at 100% line and branch coverage; strict ruff
+  lint/format at zero findings.
+- Infrastructure accumulated since 0.8.0: bounded Python 3.9–3.13 CI and
+  package metadata validation; publishing runs only for a release whose tag
+  matches the package version via PyPI trusted publishing; a GitForge
+  pipeline definition (`.gitforge.yml`) mirrors the CI lanes on the primary
+  CI platform.
+
 ## 0.8.0 - Safe Runtime Qualification
 
 - Made the safe runtime the default: no I/O at import or construction;
@@ -19,16 +40,6 @@
   stale-lock-aware cache lock for acquisition.
 - Receipted platform qualification for Linux x86-64; see
   `docs/planning/PLATFORM_MATRIX.md`.
-
-## Unreleased
-
-- Added repository guidance and a root MIT license for the Python wrapper.
-- Established `.github/` as the release-note location for future changes.
-- Added bounded Python 3.9–3.13 CI and package metadata validation.
-- Reworked publishing to run only for a published release whose tag matches
-  the package version; publishing uses PyPI trusted publishing.
-- Added a GitForge pipeline definition (`.gitforge.yml`) mirroring the CI
-  lanes on the primary CI platform.
 
 ## 0.7.3
 

@@ -55,6 +55,38 @@ directory on instantiation. New code should use the default (safe) mode, which
 verifies digests, validates archive members on extraction, and never touches
 the shell.
 
+## Command line
+
+The safe runtime is also installed as a `py7zip` console script (and is
+reachable as `python -m py7zip`). Every subcommand drives `SafePy7zip`, so the
+CLI shares the digest-verified acquisition, argument-list execution, and
+zip-slip guard with the library. Options follow the subcommand:
+
+```console
+$ py7zip download                                  # acquire + verify the 7za for this host
+$ py7zip compress src/ backup.7z -o -mx=9          # extra 7-Zip switches via -o/--option
+$ py7zip list backup.7z
+$ py7zip extract backup.7z restore/                # zip-slip guarded
+$ py7zip incremental src/ backup.7z                # update in place, deletions retained
+$ py7zip differential src/ backup.7z               # writes backup.diff.7z
+$ py7zip snapshot src/ backups/site.7z             # stamps: site.<timestamp>.7z
+```
+
+Subcommands: `download`, `compress`, `full`, `incremental`, `extract`,
+`list`, `differential`, `snapshot`. Common flags: `--binary-path` (use a
+specific 7-Zip executable instead of acquiring one), `--cache-dir`, `--timeout`
+(seconds, default 300), and `-o/--option` (repeatable extra 7-Zip switch).
+
+The exit code is machine-readable: `0` success, `1` archive execution or
+binary acquisition failed, `2` usage error, `3` timeout, `4` the archive
+contained unsafe members, `5` this host has no catalog artifact. Errors print
+one `py7zip: ...` line on stderr.
+
+The same operations stay available in Python (`SafePy7zip.compress`,
+`.decompress`, `.full`, `.incremental`, `.differential`, `.snapshot`,
+`.list_entries`); the CLI is a thin dispatcher over them, and the acquired
+binary itself can still be run directly (`7za l backup.7z`) — see below.
+
 ## 7zip Usage (Command Line Arguments; aka "Options")
 	Usage: 7za <command> [<switches>...] <archive_name> [<file_names>...] [@listfile]
 

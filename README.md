@@ -1,7 +1,8 @@
 # py7zip
 An unofficial, cross platform, lightweight, and easy to use wrapper for 7zip command line binaries (7za) in Python. 
 Unlike other libraries, this one fully supports 7zip natively, is easy to setup/install, and is "pythonic" with 
-the intent to be used in code and scripts, not through the terminal. Additionally, you CAN use the '7za' binaries
+the intent to be used in code and scripts — and it now ships the same operations as a `py7zip` command-line
+utility (plus `python -m py7zip`). Additionally, you CAN use the '7za' binaries
 directly as the specific binaries for your system will be installed automatically and you can therefore use it from
 the terminal/command line as you normally would. This also lends to making cross platform apps using this module.
 
@@ -9,6 +10,28 @@ Acquired binaries are verified against pinned SHA-256 digests before use, and al
 archive operations run the binary through an argument-list boundary (no shell)
 with member validation on extraction. See [docs/USAGE.md](docs/USAGE.md) and
 [docs/planning/COMPATIBILITY.md](docs/planning/COMPATIBILITY.md).
+
+## Quick start
+
+```python
+import py7zip
+
+z = py7zip.Py7zip()  # detection only: no I/O at import or construction
+z.ensure_binary()  # downloads a checksum-verified 7za on first call
+result = z.compress("path/to/src", "backup.7z")
+if result.success:
+    print("ok:", result.command)
+```
+
+```console
+$ py7zip compress src/ backup.7z
+$ py7zip list backup.7z
+$ py7zip extract backup.7z restore/
+```
+
+The CLI exposes `download`, `compress`, `full`, `incremental`, `extract`,
+`list`, `differential`, and `snapshot` with shell-readable exit codes; the
+full surface is documented in [docs/USAGE.md](docs/USAGE.md).
 
 ## Why Choose py7zip?
 - **Seamless Integration**: Unlike other libraries, py7zip seamlessly integrates 7zip functionality directly into Python, 

@@ -155,3 +155,22 @@ The migration map's "removed" row was not taken. Legacy mode still probes
 `docs/CHANGELOG.md` over HTTPS, so `requests` stays a runtime dependency for
 that path. Removing it requires deprecating the legacy version probe first.
 
+### 7. A `py7zip` command-line interface is added (additive)
+
+The package installs a `py7zip` console script and a `python -m py7zip`
+entrypoint (`py7zip/cli.py`) exposing eight subcommands over `SafePy7zip`:
+`download`, `compress`, `full`, `incremental`, `extract`, `list`,
+`differential`, `snapshot`. The CLI is a thin dispatcher: it adds no runtime
+behaviour of its own and cannot reach legacy mode. Exit codes are part of the
+contract — `0` success, `1` archive execution or binary acquisition failure,
+`2` usage error, `3` timeout, `4` refused unsafe archive members, `5`
+unsupported platform — with errors printed as one `py7zip: ...` line on
+stderr. Two supporting additions were made to `py7zip/safe.py`, both additive:
+`SafePy7zip.list_entries()` (member listing on the safe runtime, pinned by
+`tests/test_safe_unit.py`) and the module-level naming helpers
+`snapshot_name()` / `differential_name()` used by both the runtime and the CLI
+so the derived names cannot drift. Pinned by `tests/test_cli.py` (parser
+surface, happy paths on the bundled binary, and every exit code) and
+`tests/test_import_hygiene.py` (the entrypoints add no import-time I/O).
+
+

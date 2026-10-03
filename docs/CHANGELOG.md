@@ -1,5 +1,21 @@
 ## CHANGELOG
 
+- 0.9.0 - Command-Line Interface
+  - Added a `py7zip` console script and `python -m py7zip` entrypoint
+    exposing the safe runtime as eight subcommands: `download`, `compress`,
+    `full`, `incremental`, `extract`, `list`, `differential`, and `snapshot`.
+  - Defined a shell-readable exit-code contract (0 success, 1 execution or
+    acquisition failure, 2 usage, 3 timeout, 4 unsafe archive members,
+    5 unsupported platform), documented and pinned by tests.
+  - Added `SafePy7zip.list_entries()` and the shared naming helpers
+    `snapshot_name()` / `differential_name()` so the CLI and the runtime
+    derive identical archive names.
+  - Common flags: `--binary-path`, `--cache-dir`, `--timeout`, and repeatable
+    `-o/--option` for extra 7-Zip switches.
+  - Raised the development-status classifier to Beta.
+  - Offline suite grown to 200 tests at 100% line and branch coverage
+    (544 statements, 128 branches), strict ruff lint/format at zero findings.
+
 - 0.8.0 - Safe Runtime Qualification
   - Made the safe runtime the default: platform detection on construction
     only, with digest-verified binary acquisition and archive execution as
