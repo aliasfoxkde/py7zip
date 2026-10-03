@@ -46,6 +46,17 @@ The scan reported 418 findings; every medium-or-higher one was inspected:
 > `succeeded` with exit-code receipts, 2026-10-02T21:21:31Z → 21:37:03Z.
 > The legacy findings below are retained as the historical record.
 
+> **Update 2026-10-03 (0.9.0 CLI slice):** the CLI gap is closed and the
+> wheel validated end to end; two real defects were found by that validation
+> and fixed with pinning tests (CLI switches untypeable → `--` terminator,
+> `ac2b034`; `differential` failing on re-run → stale diff replaced,
+> `13fe83e`). Full receipts in `docs/planning/HANDOFF.md` ("0.9.0 validation
+> findings"). New platform-side observation: under sqlite write contention
+> GitForge defers push-triggered CI inserts and answers run triggers with a
+> null run id, so the GitForge CI run for `13fe83e` was pending at the close
+> of this slice while the same commits sat on GitHub. Suite at close: 206
+> passed, 100.0% line+branch coverage, ruff clean.
+
 1. **GitForge pipeline execution is blocked by platform version skew, not by
    this repository.** The running release (`gitforge-989b33e2-20260925`)
    answers `POST /api/pipelines` with 405 and its list handler drops the

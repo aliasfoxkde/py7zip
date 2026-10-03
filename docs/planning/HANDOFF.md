@@ -63,6 +63,45 @@ the PyPI publish path.
    `bb76b684` graded commit `3252d397` green (`test` + `lint`, exit-code
    receipts). The PyPI publish lane remains open (see Phase P3 in
    `QUALIFICATION_PLAN_2026-09-29.md`).
+6. ~~Command-line access: the package was library-only ("pythonic, not through
+   the terminal") while the README advertised direct 7za use.~~ **Done
+   2026-10-03** (`13fe83e`): a `py7zip` console script and `python -m py7zip`
+   expose eight subcommands over the safe runtime with a typed exit-code
+   contract (0/1/2/3/4/5), pinned by `tests/test_cli.py`; validated end to end
+   from a clean venv against the built wheel (real dynamic download, digest
+   verified; compress/list/extract; the backup family; the two-step
+   differential restore via `-- -y`; direct `7za` invocation; live exit codes
+   1/2/3). See `docs/USAGE.md` ("Command line") and COMPATIBILITY.md entries
+   7–8.
+
+## 0.9.0 validation findings (2026-10-03, wheel e2e on Linux x86-64)
+
+Both defects below were found by driving the installed wheel, not by reading
+source, and are fixed with pinning tests on the same commits.
+
+1. **CLI switches could not be typed** (`ac2b034`). Every 7-Zip switch starts
+   with `-`, so the `-o/--option` flag failed with argparse's
+   missing-argument error for its entire purpose (`-o -y`, `-o -mx=9`);
+   only `-o=-mx=9` parsed. Replaced by the `--` terminator 7-Zip itself
+   documents; the tail reaches 7za verbatim. Pinned by
+   `tests/test_cli.py::TestVerbatimSwitches`.
+2. **`differential` failed on re-run** (`13fe83e`). 7za refuses to create the
+   archive named in the `-u...!` switch when it exists (errno 17), so a
+   second differential against the same base — the normal scheduled case —
+   always failed on the file the previous call had written. The runtime now
+   replaces a pre-existing diff, matching `compress`/`full`/`incremental`/
+   `snapshot`, which all accept existing targets. Receipts: 7-Zip 24.00,
+   Linux x86-64, Python 3.13.5. Pinned by
+   `tests/test_safe_unit.py::TestDifferentialDiffReplacement` and
+   `tests/test_e2e_bundled.py::TestBackupModes::test_differential_replaces_a_previous_diff`.
+   Recorded as COMPATIBILITY.md entry 8.
+
+Suite after both fixes: **206 passed**, 100.0% line and branch coverage
+(552 statements, 132 branches), `ruff check .` and `ruff format --check .`
+clean. Platform-side residual (not py7zip): GitForge's sqlite write
+contention defers push-triggered CI inserts and the run trigger answers
+`queued` with no run id while contention persists, so the GitForge CI run for
+`13fe83e` was pending at handoff time; GitHub received the same commits.
 
 ## Promotion gate
 

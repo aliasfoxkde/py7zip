@@ -84,7 +84,7 @@ parsing and everything after it reaches 7za verbatim — the same convention
 The exit code is machine-readable: `0` success, `1` archive execution or
 binary acquisition failed, `2` usage error, `3` timeout, `4` the archive
 contained unsafe members, `5` this host has no catalog artifact. Errors print
-one `py7zip: ...` line on stderr.
+a `py7zip: ...` diagnostic on stderr, which may embed 7-Zip's own output.
 
 The same operations stay available in Python (`SafePy7zip.compress`,
 `.decompress`, `.full`, `.incremental`, `.differential`, `.snapshot`,
