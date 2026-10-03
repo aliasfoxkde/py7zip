@@ -64,6 +64,36 @@ class TestArchiveRunnerGuards:
             runner.run("compress", "src", "dst", b"-y")
 
 
+class TestDifferentialDiffReplacement:
+    """A pre-existing diff is replaced, never refused.
+
+    7za rejects the switch-named archive when it exists (errno 17), so a
+    re-run against the same base must clear the derived file first.
+    """
+
+    def test_existing_diff_is_removed_before_the_update(self, tmp_path, recording_run):
+        preset = tmp_path / "7za"
+        preset.write_bytes(b"MZ")
+        stale = tmp_path / "base.diff.7z"
+        stale.write_bytes(b"stale diff")
+
+        manager = SafePy7zip(binary_path=preset)
+        manager.differential("src", tmp_path / "base.7z")
+
+        assert not stale.exists()
+        assert recording_run[0][0][1:3] == ("u", str(tmp_path / "base.7z"))
+        assert "-up0q3r2x2y2z0w2!" + str(stale) in recording_run[0][0]
+
+    def test_absent_diff_leaves_the_disk_alone(self, tmp_path, recording_run):
+        preset = tmp_path / "7za"
+        preset.write_bytes(b"MZ")
+
+        manager = SafePy7zip(binary_path=preset)
+        manager.differential("src", tmp_path / "base.7z")
+
+        assert len(recording_run) == 1  # the update ran; no pre-pass side trip
+
+
 class TestListEntries:
     def test_members_are_parsed_from_technical_listing(self, tmp_path, monkeypatch):
         def run_with_listing(command, **_kwargs):

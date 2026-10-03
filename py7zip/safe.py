@@ -299,13 +299,18 @@ class SafePy7zip:
         it with overwrite enabled, e.g. ``decompress(diff, target,
         options=("-y",))``.  The diff must be 7z format because anti entries
         are a 7z feature; ``diff_path`` defaults to a sibling of the base
-        named ``<base-stem>.diff.7z``.
+        named ``<base-stem>.diff.7z``.  A pre-existing diff is replaced: the
+        switch-named archive is never accepted by 7za (errno 17), so an
+        unattended re-run against the same base would otherwise always fail
+        on a derived artifact that this call created.
         """
         diff = (
             Path(diff_path) if diff_path is not None else differential_name(destination)
         )
         if diff.suffix.lower() != ".7z":
             raise ValueError("differential archives must use the .7z format")
+        if diff.exists():
+            diff.unlink()
         update_switch = f"-up0q3r2x2y2z0w2!{os.fspath(diff)}"
         return self.run(
             "update", source, destination, ("-y", "-u-", update_switch, *options)

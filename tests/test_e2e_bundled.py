@@ -160,6 +160,31 @@ class TestBackupModes:
         safe.differential(source, base, diff_path=custom)
         assert custom.is_file()
 
+    def test_differential_replaces_a_previous_diff(self, safe, tmp_path):
+        """7za refuses to create the switch-named archive when it exists, so
+        an unattended re-run would fail on the diff this call produced."""
+        source = tmp_path / "src"
+        _write_tree(source, {"a.txt": "v1"})
+        base = tmp_path / "base.7z"
+        safe.full(source, base)
+
+        diff = tmp_path / "base.diff.7z"
+        safe.differential(source, base)
+        first = diff.read_bytes()
+
+        time.sleep(1.2)
+        _write_tree(source, {"a.txt": "v2", "later.txt": "added"})
+        safe.differential(source, base)  # re-run against the same base
+
+        assert diff.is_file()
+        assert diff.read_bytes() != first  # the stale diff was replaced
+        restore = tmp_path / "restore"
+        safe.decompress(base, restore, options=("-y",))
+        safe.decompress(diff, restore, options=("-y",))
+        assert (restore / source.name / "later.txt").read_text(encoding="utf-8") == (
+            "added"
+        )
+
     def test_differential_refuses_non_7z_diff_targets(self, safe, tmp_path):
         source = tmp_path / "src"
         _write_tree(source, {"a.txt": "v1"})

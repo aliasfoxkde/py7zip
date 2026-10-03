@@ -165,12 +165,31 @@ behaviour of its own and cannot reach legacy mode. Exit codes are part of the
 contract — `0` success, `1` archive execution or binary acquisition failure,
 `2` usage error, `3` timeout, `4` refused unsafe archive members, `5`
 unsupported platform — with errors printed as one `py7zip: ...` line on
-stderr. Two supporting additions were made to `py7zip/safe.py`, both additive:
-`SafePy7zip.list_entries()` (member listing on the safe runtime, pinned by
-`tests/test_safe_unit.py`) and the module-level naming helpers
-`snapshot_name()` / `differential_name()` used by both the runtime and the CLI
-so the derived names cannot drift. Pinned by `tests/test_cli.py` (parser
-surface, happy paths on the bundled binary, and every exit code) and
-`tests/test_import_hygiene.py` (the entrypoints add no import-time I/O).
+stderr. 7-Zip's own switches follow a `--` terminator and reach the binary
+verbatim, because every 7-Zip switch starts with `-` and cannot follow a
+value-taking flag. Two supporting additions were made to `py7zip/safe.py`,
+both additive: `SafePy7zip.list_entries()` (member listing on the safe
+runtime, pinned by `tests/test_safe_unit.py`) and the module-level naming
+helpers `snapshot_name()` / `differential_name()` used by both the runtime and
+the CLI so the derived names cannot drift. Pinned by `tests/test_cli.py`
+(parser surface, happy paths on the bundled binary, every exit code, and the
+verbatim-switch contract) and `tests/test_import_hygiene.py` (the
+entrypoints add no import-time I/O).
+
+### 8. `differential` replaces a pre-existing diff archive
+
+`SafePy7zip.differential` now removes an existing diff target before running.
+7za refuses to create the archive named in the `-u...!` switch when it already
+exists (errno 17), so the previous behaviour failed every unattended re-run
+against the same base with "System ERROR: File exists" — on a derived
+artifact the previous differential call itself had created. `compress`, `full`,
+`incremental`, and `snapshot` already accepted existing targets, so
+differential is brought in line: the diff is treated as what it is, a pure
+function of `(source, base)` whose stale copy has no value. Callers who need
+refuse-if-exists semantics must check the path themselves before calling.
+Found in end-to-end validation of the installed 0.9.0 wheel (second
+differential against the same base, 7-Zip 24.00 on Linux x86-64). Pinned by
+`tests/test_safe_unit.py::TestDifferentialDiffReplacement` and
+`tests/test_e2e_bundled.py::TestBackupModes::test_differential_replaces_a_previous_diff`.
 
 

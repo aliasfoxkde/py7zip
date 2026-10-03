@@ -11,9 +11,11 @@
 - Added `SafePy7zip.list_entries()` and the shared naming helpers
   `snapshot_name()` / `differential_name()` so the CLI and the runtime derive
   identical archive names.
+- Fixed `differential` failing on re-run: a pre-existing diff archive is now
+  replaced instead of triggering 7za's "File exists" error.
 - Common flags: `--binary-path`, `--cache-dir`, and `--timeout`. 7-Zip's own
   switches follow a `--` terminator and reach the binary verbatim.
-- Offline suite: 203 tests at 100% line and branch coverage; strict ruff
+- Offline suite: 206 tests at 100% line and branch coverage; strict ruff
   lint/format at zero findings.
 - Infrastructure accumulated since 0.8.0: bounded Python 3.9–3.13 CI and
   package metadata validation; publishing runs only for a release whose tag
