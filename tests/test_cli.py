@@ -256,6 +256,58 @@ class TestExitCodeContract:
         assert ".7z" in capsys.readouterr().err
 
 
+class TestVerbatimSwitches:
+    """Switches after ``--`` reach 7-Zip untouched.
+
+    Every 7-Zip switch starts with ``-``, so they cannot follow a
+    value-taking flag; the verbatim tail is the contract instead.
+    """
+
+    def test_switches_after_the_terminator_reach_the_runtime(self, monkeypatch):
+        seen = {}
+
+        class CapturingRuntime:
+            def __init__(self, **_kwargs):
+                pass
+
+            def decompress(self, archive, destination, options=()):
+                seen["call"] = (archive, destination, tuple(options))
+
+        monkeypatch.setattr(cli_module, "SafePy7zip", CapturingRuntime)
+        assert main(["extract", "arc.7z", "out", "--", "-y", "-mmt=4"]) == 0
+        assert seen["call"] == ("arc.7z", "out", ("-y", "-mmt=4"))
+
+    def test_overwrite_extract_repeats_without_a_prompt(
+        self, bundled_binary, tmp_path, capsys
+    ):
+        """The documented two-step differential restore: extract twice into
+        the same tree with ``-y``, which 7-Zip only accepts after ``--``."""
+        _write_tree(tmp_path)
+        base = ["--binary-path", str(bundled_binary)]
+        archive = tmp_path / "base.7z"
+        assert main(["compress", *base, str(tmp_path / "src"), str(archive)]) == 0
+        capsys.readouterr()
+        out = tmp_path / "out"
+
+        assert main(["extract", *base, str(archive), str(out), "--", "-y"]) == 0
+        assert main(["extract", *base, str(archive), str(out), "--", "-y"]) == 0
+        assert (out / "src" / "a.txt").read_text(encoding="utf-8") == "cli"
+
+    def test_the_first_terminator_ends_py7zip_parsing(self, monkeypatch):
+        seen = {}
+
+        class CapturingRuntime:
+            def __init__(self, **_kwargs):
+                pass
+
+            def compress(self, source, destination, options=()):
+                seen["options"] = tuple(options)
+
+        monkeypatch.setattr(cli_module, "SafePy7zip", CapturingRuntime)
+        assert main(["compress", "src", "arc.7z", "--", "-y", "--", "-mx=9"]) == 0
+        assert seen["options"] == ("-y", "--", "-mx=9")
+
+
 def test_python_dash_m_entrypoint_runs_the_cli(monkeypatch, capsys):
     """``python -m py7zip`` dispatches into the same parser."""
     monkeypatch.setattr(sys, "argv", ["py7zip", "--version"])

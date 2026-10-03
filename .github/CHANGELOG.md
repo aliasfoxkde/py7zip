@@ -11,9 +11,9 @@
 - Added `SafePy7zip.list_entries()` and the shared naming helpers
   `snapshot_name()` / `differential_name()` so the CLI and the runtime derive
   identical archive names.
-- Common flags: `--binary-path`, `--cache-dir`, `--timeout`, and repeatable
-  `-o/--option` for extra 7-Zip switches.
-- Offline suite: 200 tests at 100% line and branch coverage; strict ruff
+- Common flags: `--binary-path`, `--cache-dir`, and `--timeout`. 7-Zip's own
+  switches follow a `--` terminator and reach the binary verbatim.
+- Offline suite: 203 tests at 100% line and branch coverage; strict ruff
   lint/format at zero findings.
 - Infrastructure accumulated since 0.8.0: bounded Python 3.9–3.13 CI and
   package metadata validation; publishing runs only for a release whose tag

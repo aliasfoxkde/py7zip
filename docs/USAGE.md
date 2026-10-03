@@ -64,9 +64,10 @@ zip-slip guard with the library. Options follow the subcommand:
 
 ```console
 $ py7zip download                                  # acquire + verify the 7za for this host
-$ py7zip compress src/ backup.7z -o -mx=9          # extra 7-Zip switches via -o/--option
+$ py7zip compress src/ backup.7z -- -mx=9          # extra 7-Zip switches after --
 $ py7zip list backup.7z
 $ py7zip extract backup.7z restore/                # zip-slip guarded
+$ py7zip extract backup.7z restore/ -- -y          # ...with overwrite enabled
 $ py7zip incremental src/ backup.7z                # update in place, deletions retained
 $ py7zip differential src/ backup.7z               # writes backup.diff.7z
 $ py7zip snapshot src/ backups/site.7z             # stamps: site.<timestamp>.7z
@@ -74,8 +75,11 @@ $ py7zip snapshot src/ backups/site.7z             # stamps: site.<timestamp>.7z
 
 Subcommands: `download`, `compress`, `full`, `incremental`, `extract`,
 `list`, `differential`, `snapshot`. Common flags: `--binary-path` (use a
-specific 7-Zip executable instead of acquiring one), `--cache-dir`, `--timeout`
-(seconds, default 300), and `-o/--option` (repeatable extra 7-Zip switch).
+specific 7-Zip executable instead of acquiring one), `--cache-dir`, and
+`--timeout` (seconds, default 300). Every 7-Zip switch starts with `-`, so
+they cannot follow a value-taking flag: a `--` terminator ends py7zip's
+parsing and everything after it reaches 7za verbatim — the same convention
+7-Zip itself documents for stopping switch parsing.
 
 The exit code is machine-readable: `0` success, `1` archive execution or
 binary acquisition failed, `2` usage error, `3` timeout, `4` the archive

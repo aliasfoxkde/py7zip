@@ -10,11 +10,11 @@
   - Added `SafePy7zip.list_entries()` and the shared naming helpers
     `snapshot_name()` / `differential_name()` so the CLI and the runtime
     derive identical archive names.
-  - Common flags: `--binary-path`, `--cache-dir`, `--timeout`, and repeatable
-    `-o/--option` for extra 7-Zip switches.
+  - Common flags: `--binary-path`, `--cache-dir`, and `--timeout`; 7-Zip's own
+    switches follow a `--` terminator and reach the binary verbatim.
   - Raised the development-status classifier to Beta.
-  - Offline suite grown to 200 tests at 100% line and branch coverage
-    (544 statements, 128 branches), strict ruff lint/format at zero findings.
+  - Offline suite grown to 203 tests at 100% line and branch coverage
+    (550 statements, 130 branches), strict ruff lint/format at zero findings.
 
 - 0.8.0 - Safe Runtime Qualification
   - Made the safe runtime the default: platform detection on construction

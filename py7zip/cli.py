@@ -12,7 +12,8 @@ zip-slip validation — and maps its outcomes onto shell exit codes:
 * ``5`` the host platform has no catalog artifact
 
 The same operations are available programmatically through
-``python -m py7zip`` and the installed ``py7zip`` script.
+``python -m py7zip`` and the installed ``py7zip`` script.  Switches meant for
+7-Zip itself follow a ``--`` terminator and reach the binary untouched.
 """
 
 from __future__ import annotations
@@ -40,9 +41,12 @@ def build_parser() -> argparse.ArgumentParser:
         prog="py7zip",
         description="Create, inspect, and extract 7-Zip archives.",
         epilog="Exit codes: 0 success, 1 execution failure, 2 usage, "
-        "3 timeout, 4 unsafe archive members, 5 unsupported platform.",
+        "3 timeout, 4 unsafe archive members, 5 unsupported platform. "
+        "7-Zip switches are passed verbatim after a -- terminator "
+        "(e.g. extract arc.7z out -- -y).",
     )
     parser.add_argument("--version", action="version", version=__version__)
+    parser.set_defaults(option=())
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument(
         "--binary-path",
@@ -61,14 +65,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=300.0,
         help="seconds before an archive operation is killed (default 300)",
-    )
-    common.add_argument(
-        "-o",
-        "--option",
-        action="append",
-        default=[],
-        metavar="SWITCH",
-        help="pass one extra 7-Zip switch, repeatable (e.g. -o -mx=9)",
     )
     subcommands = parser.add_subparsers(dest="command", required=True)
 
@@ -169,8 +165,21 @@ def _dispatch_command(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Parse ``argv`` (default: ``sys.argv``) and return the exit code."""
-    args = build_parser().parse_args(argv)
+    """Parse ``argv`` (default: ``sys.argv``) and return the exit code.
+
+    ``--`` ends py7zip's own parsing; everything after it is handed to 7-Zip
+    verbatim.  Every 7-Zip switch starts with ``-`` (``-y``, ``-mx=9``), so
+    they cannot follow a value-taking flag — the verbatim tail is the same
+    convention 7-Zip itself documents for stopping switch parsing.
+    """
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if "--" in raw:
+        split = raw.index("--")
+        raw, passthrough = raw[:split], tuple(raw[split + 1 :])
+    else:
+        passthrough = ()
+    args = build_parser().parse_args(raw)
+    args.option = passthrough
     try:
         return args.func(args)
     except ArchiveTimeoutError as error:
