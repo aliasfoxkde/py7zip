@@ -98,18 +98,26 @@ source, and are fixed with pinning tests on the same commits.
 
 Suite after both fixes: **206 passed**, 100.0% line and branch coverage
 (552 statements, 132 branches), `ruff check .` and `ruff format --check .`
-clean. Platform-side residual (not py7zip): GitForge's CI lane was degraded
-for all repos during this session — sqlite write contention (30-second
-`UPDATE runners` statements) made the run trigger answer `queued` with a null
-run id, and after service restarts the orchestrator's event bus had zero
-receivers, turning every trigger into a 503 `event_publish_failed: channel
-closed` (`InMemoryEventBus.publish` fails only when no subscriber exists),
-with the scheduler additionally deciding jobs mid-execution (lease
-invalidation). The 0.8.0-era run for `ac2b034` has `test` green (`7d26a3c6`)
-with `lint` wedged pending; a bounded retry loop re-attempts the trigger for
-`5a60a7c`. GitHub received every commit and the `v0.9.0` release with
-artifacts attached; a GitForge CI-green receipt for 0.9.0 remains open and
-belongs to the platform-repair campaign, not this repository.
+clean. **GitForge CI receipt for 0.9.0 (2026-10-03):** run `e12d5f4a` on
+pipeline `py7zip-ci` graded commit `5a60a7c` (the `v0.9.0` tag) green —
+`test` succeeded (`206 passed in 12.04s`, pytest 9.1.1, 09:30:32Z→09:33:16Z)
+and `lint` succeeded (`All checks passed!` / `40 files already formatted`,
+ruff 0.16.10, 09:38:02Z→09:38:25Z) on the local docker runner. The tip
+`413d92d` is green too (run `21cb39e6`, both lanes). Platform-side residual
+(not py7zip): the lane was degraded earlier in the session — sqlite write
+contention (30-second `UPDATE runners` statements) made run triggers answer
+202 with a null run id, and after service restarts the orchestrator's event
+bus had zero receivers, turning triggers into 503 `event_publish_failed:
+channel closed` (`InMemoryEventBus.publish` fails only when no subscriber
+exists), with the scheduler additionally deciding jobs mid-execution (lease
+invalidation). A bounded retry loop saw 12 consecutive null trigger
+responses over ~1h, yet the runs those same triggers created executed and
+succeeded afterwards: **a null trigger response means the correlation
+window expired, not that the run was dropped** — check
+`GET /api/pipeline-runs?pipeline_id=…` before concluding failure. The
+0.8.0-era run for `ac2b034` still has `lint` wedged pending (`7d26a3c6`).
+GitHub received every commit and the `v0.9.0` release with artifacts
+attached.
 
 ## Promotion gate
 

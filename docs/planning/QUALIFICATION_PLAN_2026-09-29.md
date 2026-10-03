@@ -54,8 +54,11 @@ The scan reported 418 findings; every medium-or-higher one was inspected:
 > findings"). New platform-side observation: under sqlite write contention
 > GitForge defers push-triggered CI inserts and answers run triggers with a
 > null run id, so the GitForge CI run for `13fe83e` was pending at the close
-> of this slice while the same commits sat on GitHub. Suite at close: 206
-> passed, 100.0% line+branch coverage, ruff clean.
+> of this slice while the same commits sat on GitHub. **Closed later the
+> same night:** run `e12d5f4a` graded `5a60a7c` (v0.9.0) green — a null
+> trigger response hides a deferred insert, not a dropped run (receipts in
+> `HANDOFF.md`). Suite at close: 206 passed, 100.0% line+branch coverage,
+> ruff clean.
 
 1. **GitForge pipeline execution is blocked by platform version skew, not by
    this repository.** The running release (`gitforge-989b33e2-20260925`)
