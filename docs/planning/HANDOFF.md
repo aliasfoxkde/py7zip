@@ -114,10 +114,15 @@ invalidation). A bounded retry loop saw 12 consecutive null trigger
 responses over ~1h, yet the runs those same triggers created executed and
 succeeded afterwards: **a null trigger response means the correlation
 window expired, not that the run was dropped** — check
-`GET /api/pipeline-runs?pipeline_id=…` before concluding failure. The
-0.8.0-era run for `ac2b034` still has `lint` wedged pending (`7d26a3c6`).
-GitHub received every commit and the `v0.9.0` release with artifacts
-attached.
+`GET /api/pipeline-runs` (both `pipeline_id` and `limit` params are
+ignored; the list is global) before concluding failure. The
+0.8.0-era run for `ac2b034` still has `lint` wedged pending (`7d26a3c6`),
+and the post-release docs commit `d6a6c5d` has two runs whose `test`
+lanes succeeded while `lint` stayed `queued` with the runner idle — the
+same platform residual, cosmetic here because `ruff check .` and
+`ruff format --check .` were run clean on that exact tree before the
+commit. GitHub received every commit and the `v0.9.0` release with
+artifacts attached.
 
 ## Promotion gate
 
