@@ -25,6 +25,28 @@ class ArchiveTraversalError(ArchiveExecutionError):
     """Raised when an archive member would escape its extraction root."""
 
 
+def snapshot_name(destination: str | os.PathLike[str], stamp: str) -> Path:
+    """Return the archive path a snapshot of ``destination`` writes to.
+
+    The stamp is inserted into the name's stem, so ``backups/site.7z``
+    becomes ``backups/site.<stamp>.7z``.  ``SafePy7zip.snapshot`` and the
+    command-line interface share this helper so both always agree on the
+    produced name.
+    """
+    target = Path(destination)
+    return target.with_name(f"{target.stem}.{stamp}.7z")
+
+
+def differential_name(destination: str | os.PathLike[str]) -> Path:
+    """Return the diff archive path ``SafePy7zip.differential`` writes to.
+
+    The diff is a sibling of the base archive with the ``.diff.7z``
+    suffix; sharing the helper keeps the runtime and the command-line
+    interface consistent about where a differential lands.
+    """
+    return Path(os.fspath(destination)).with_suffix(".diff.7z")
+
+
 @dataclass(frozen=True)
 class ArchiveResult:
     """Complete result of one 7-Zip invocation."""
@@ -226,6 +248,12 @@ class SafePy7zip:
         validate_archive_members(runner.list_entries(source), destination)
         return runner.run("decompress", source, destination, options)
 
+    def list_entries(self, archive: str | os.PathLike[str]) -> tuple[str, ...]:
+        """Return the member paths stored in ``archive``."""
+        return ArchiveRunner(self.ensure_binary(), timeout=self.timeout).list_entries(
+            archive
+        )
+
     def full(
         self,
         source: str | os.PathLike[str],
@@ -274,9 +302,7 @@ class SafePy7zip:
         named ``<base-stem>.diff.7z``.
         """
         diff = (
-            Path(diff_path)
-            if diff_path is not None
-            else Path(os.fspath(destination)).with_suffix(".diff.7z")
+            Path(diff_path) if diff_path is not None else differential_name(destination)
         )
         if diff.suffix.lower() != ".7z":
             raise ValueError("differential archives must use the .7z format")
@@ -306,6 +332,5 @@ class SafePy7zip:
             # Naive local time is deliberate: the stamp names a wall-clock
             # snapshot on the machine taking the backup, not an instant.
             stamp = datetime.now().strftime("%Y%m%dT%H%M%S")  # noqa: DTZ005
-        target = Path(destination)
-        stamped = target.with_name(f"{target.stem}.{stamp}.7z")
+        stamped = snapshot_name(destination, stamp)
         return self.run("compress", source, stamped, ("-y", *options))

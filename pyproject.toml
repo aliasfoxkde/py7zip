@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py7zip"
-version = "0.8.0"
+version = "0.9.0"
 description = "An unofficial, cross-platform, lightweight wrapper for 7-Zip command-line binaries."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
@@ -16,7 +16,7 @@ dependencies = [
     "requests",
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Build Tools",
     "Programming Language :: Python",
@@ -29,6 +29,9 @@ classifiers = [
     "Programming Language :: Python :: 3 :: 13",
     "Programming Language :: Python :: 3 :: 14",
 ]
+
+[project.scripts]
+py7zip = "py7zip.cli:main"
 [project.urls]
 Homepage = "https://pypi.org/project/py7zip/"
 "Source Code" = "https://github.com/aliasfoxkde/py7zip"

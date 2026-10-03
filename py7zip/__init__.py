@@ -28,13 +28,15 @@ from .safe import (
     ArchiveTimeoutError,
     ArchiveTraversalError,
     SafePy7zip,
+    differential_name,
+    snapshot_name,
     validate_archive_members,
 )
 
 try:
     __version__ = _package_version("py7zip")
 except PackageNotFoundError:  # running from a source checkout
-    __version__ = "0.8.0"
+    __version__ = "0.9.0"
 
 __all__ = [
     "ArchiveExecutionError",
@@ -52,5 +54,7 @@ __all__ = [
     "Py7zip",
     "SafePy7zip",
     "UnsupportedPlatformError",
+    "differential_name",
+    "snapshot_name",
     "validate_archive_members",
 ]
