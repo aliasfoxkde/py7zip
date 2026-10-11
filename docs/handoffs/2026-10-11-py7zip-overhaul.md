@@ -6,13 +6,19 @@ integrity/authenticity verification, safe cache/install/update behavior,
 Python API/CLI ergonomics, packaging, tests, CI/release, supply-chain and
 support policy.
 
-**Evidence boundary:** branch `codex/py7zip-handoff-20261011`, HEAD
-`9d428da` (= `origin/main` at branch time; `origin/main` has since advanced
-one docs commit to `68721cf`). Working tree clean at audit start. All local
-commands were run in this worktree on 2026-10-10; environment: Linux
-x86-64, Python CPython 3.13.5. Upstream facts were verified by live fetch
-on 2026-10-10 and are cited below. No runtime code was edited for this
-handoff.
+**Evidence boundary (revision 4):** baselined against `origin/main` at
+HEAD `d606b75` (PR #22 landed OVH-05, 2026-10-11); the handoff itself
+lives on `codex/py7zip-production-handoff-20261011` as docs-only commits
+on top of that baseline. The audit
+beneath this plan was executed on branch `codex/py7zip-handoff-20261011`
+at HEAD `9d428da` (= `origin/main` at branch time, later advanced to
+`68721cf` by PR #20 and to `d606b75` by PR #22); the working tree was
+clean at audit start. Local commands ran in NVMe worktrees on 2026-10-10
+(audit) and 2026-10-11 (revisions 2–3); environment: Linux x86-64, Python
+CPython 3.13.5. Upstream facts were verified by live fetch on 2026-10-10
+and 2026-10-11 and are cited below. PR #22 removed one import line from
+`py7zip/py7zip.py`, shifting that file's line numbers; every `py7zip.py`
+citation in this revision was re-verified at `d606b75`.
 
 **Revision 2 (2026-10-11).** Refined to resolve independent review: audit
 decision D1/D2/D3/D4 are now wired as explicit ledger gates (§5), the
@@ -24,6 +30,52 @@ the probe-artifact dependency on `/var/tmp` was removed. New upstream and
 provenance evidence was gathered on **2026-10-11** (V13–V19, Appendix A.8)
 and is dated as such everywhere it appears; 2026-10-10 evidence is
 unchanged. Still docs-only: no runtime code edited.
+
+**Revision 3 (2026-10-11).** Rebases the evidence boundary onto
+`origin/main` = `d606b75` (PR #22): **OVH-05 has landed** and is recorded
+as done throughout (§1, §5.1, ledger, §6). Incorporates the five
+independently reviewed gaps: (1) OVH-14 is now a deprecation-then-removal
+sequence, grounded in V20 — the PyPI 0.6.2 sdist ships all five methods,
+so direct removal would break upgrade callers; (2) B0's Windows behavior
+and its governed fallback are stated explicitly (§1), and D-OVH-2/OVH-07
+carries a bounded decision deadline with escalation (§6 OVH-07); (3)
+acceptance rules no longer reference fixed `/var/tmp` paths — runner-owned
+`mktemp` scratch is required and historical probe artifacts are classified
+as non-acceptance evidence (§2.1, §6 OVH-01); (4) env-guarded integration
+probes are stated to be non-gating for OVH-11/OVH-21 (§6 OVH-11); (5) new
+§6.2 enumerates the supported platform/architecture rows and binds them
+into OVH-03/04/09/11/23 acceptance. New evidence: V20 (0.6.2 sdist probe,
+2026-10-11). `publish.yml` tag-gate citation tightened to `:28–35`. Still
+docs-only: no runtime code edited in this revision.
+
+**Revision 4 (2026-10-11).** Incorporates an independent review of PR #23
+at `a9a0a06` (Z.AI GLM Turbo, model `glm-5-turbo`; verdict PASS with
+corrections): **(M1)** the D-OVH-2 bounded deadline was wrongly credited to
+OVH-13's `Depends on`, which stops only OVH-13 — it says nothing about
+OVH-09's catalog freeze (OVH-09 depends on OVH-02/08/29). The deadline is
+now enforced by an explicit OVH-09 acceptance rule (§6 OVH-09); the ledger
+was re-validated — no M1 edges changed, no cycles (the revision's only new
+edge is OVH-14 → OVH-30 from L1). **(L1)** OVH-14 commit 1
+required a `DeprecationWarning` to name a removal version that no decision
+selected; new gate **OVH-30** (decision **D-OVH-7**) now records that
+version and window, and OVH-14 quotes the record instead of inventing a
+version. **(L2)** citations corrected: the characterization pins span
+`tests/test_characterization_wrapper.py:300–356` (not `:300–353`); the
+`publish.yml` tag gate is `:28–34` (not the `:28–35` this doc claimed in
+revision 3); the `requests` claim now covers legacy `setup()`'s exception
+clause (`py7zip/py7zip.py:123`) in addition to the version probe. **(L3)**
+OVH-11's fake-transport acceptance now requires a size-aware/chunking
+fake: `FakeUrllibRequest._Context.read()` accepts no size argument
+(`tests/fakes.py:150–151`) while production acquisition reads
+`read(1024 * 1024)` chunks (`py7zip/acquisition.py:80`). **(L4)** OVH-25
+consumes only PLATFORM_MATRIX.md's tier *definitions* — that document's
+host rows are Phase 0 historical and contradicted by the current
+`py7zip/platforms.py`. Also from the same review: OVH-21 now states that
+`workflow_dispatch` cannot exercise the trusted-publishing step (both the
+tag gate and the publish step are `release`-only), so maintainer
+verification in the PyPI project settings UI is the real pre-release
+check; and OVH-02 must reconcile the stale `bin/INFO.md` inventory. Still
+docs-only: no runtime code edited.
 
 **Relationship to the landed audit.** `origin/main` already carries
 `docs/handoffs/PLATFORM_ARCHITECTURE_PY7ZIP_2026-10-10.md` (PR #20,
@@ -57,17 +109,37 @@ download, while every hardening line is unreleased.**
   installable directly from GitHub) and their tags are occupied on both
   remotes — they must never be reused or moved.
 - Verified: default `Py7zip()` here is safe-by-default (`legacy=False`,
-  argv-only, checksum-verified acquisition — `py7zip/py7zip.py:19–40`,
+  argv-only, checksum-verified acquisition — `py7zip/py7zip.py:18–39`,
   pinned by `tests/test_default_api.py`), so a release from this line
   actually ships the fix.
 
 Unblocking B0 does **not** require the full overhaul. The B0 critical path
-is exactly: **OVH-01 → OVH-02 → OVH-26 → (OVH-03, OVH-04, OVH-05) →
+is exactly: **OVH-01 → OVH-02 → OVH-26 → (OVH-03, OVH-04) →
 publication decision (audit P0.5/D3, taken inside OVH-21) → OVH-21**
-(§5.1). The CLI port (OVH-18), local-binary discovery + PR #8 disposition
-(OVH-17), SECURITY.md/support policy (OVH-25), legacy sunset (OVH-19), and
-CI/receipt lanes (OVH-22/23) are post-release or decision-gated work, not
-release blockers.
+(§5.1). Of the original P0 set, **OVH-05 has landed** (PR #22, `d606b75`)
+and no longer blocks. The CLI port (OVH-18), local-binary discovery + PR #8
+disposition (OVH-17), SECURITY.md/support policy (OVH-25), legacy sunset
+(OVH-19), and CI/receipt lanes (OVH-22/23) are post-release or
+decision-gated work, not release blockers.
+
+**Windows on the B0 path (explicit, not implied).** A release cut from
+this line gives Windows users exactly the following, and the OVH-21
+release notes must state it:
+
+- Safe runtime (default): `windows/pc/x64` and `windows/pc/x86` resolve
+  repo-hosted `bin/win/pc/{x64,x86}/7za.exe` through checksum-verified
+  acquisition (`py7zip/platforms.py:100–101`) — digests pinned in this
+  repository (trust-on-first-use), provenance rows UNPROVEN until OVH-02
+  anchors or excepts them. This is the **governed fallback** until
+  D-OVH-2 lands (bounded deadline and escalation: §6 OVH-07).
+- `windows/arm` (any width): no catalog row (0-byte placeholders, §3.3) →
+  typed `UnsupportedPlatformError` refusal.
+- Legacy runtime (`legacy=True`): unchanged 0.6.2-era behavior —
+  unverified `raw.githubusercontent` download with `shell=True` option
+  interpolation; the exact surface B0 exists to retire.
+- No support claim may accompany the fallback: gate OVH-26 (§6.1) decides
+  whether the README's `[x] Windows x64` row survives, and its rule is
+  "uncheck claims", never "assume support".
 
 Secondary blocker-grade fact (blocks the overhaul's core promise):
 acquisition today downloads binaries from **this repo's own mutable
@@ -105,13 +177,18 @@ P1 below replaces this with official-release acquisition.
 | V17 | Download `7z2604-mac.tar.xz`; `sha256sum`; `tar -tJf`; `file` on contents (no execution) | Local sha256 `bee04358…` == API digest (V16); contains **one universal Mach-O `7zz` (x86_64 + arm64, 6,051,824 bytes)** plus `License.txt`, `readme.txt`, `History.txt`, `MANUAL/` — the official macOS release **is** a universal binary in a single tarball |
 | V18 | `strings -a bin/mac/any/7za \| grep '7-Zip (z)'` (static, no execution) | Both slices embed official-format banners: `7-Zip (z) 24.00 (x64) … : 2024-01-30` and `7-Zip (z) 24.00 (arm64) … : 2024-01-30` |
 | V19 | Historical 24.00 anchoring probe (detail in A.8) | No GitHub release/tag `24.00` exists (release list: 21.07, 22.00, 22.01, 23.01, 24.05…26.04; tag API → 404); `7-zip.org/a/7z2400-*.tar.xz` → 404 today; SourceForge has no `7-Zip/24.00` directory; Wayback snapshot of `download.html` (2024-02-15) shows the official 24.00 artifacts at `a/7z2400-*.tar.xz`; `7z2400-linux-x64.tar.xz` **is archived** (2024-02-21 snapshot) and its inner `7zz` sha256 `12ef1251…` == bundled `bin/lin/pc/x64/7za`; `7z2400-mac.tar.xz` has **no located archived copy** |
+| V20 | *(2026-10-11, revision 3)* Download `py7zip-0.6.2.tar.gz` sdist from PyPI; `sha256sum`; `tar -xzf`; `grep -n` the wrapper | sdist sha256 `ca0f81b3eb4367fc4d54959eecad01d7155cc06db84a52fbcec685ec6dfd68d6`; its `py7zip/py7zip.py` defines `cd` (l. 48), `full`/`incremental`/`differential` (l. 110–112), `snapshot` (l. 114) — **all five methods ship in the release 0.6.2 users actually run** (git anchor: same methods at `69927d5`, 2024-02-24, one day before the PyPI upload). Grounds the OVH-14 upgrade sequence |
 
-**Probe artifacts are not part of this document.** Transient copies of the
-downloads behind V8/V17/V19 were relocated to
-`/nas/Temp/artifacts/py7zip-probes-20261011/` (outside Git; GC-eligible
-scratch). Every fact above is reproducible from the cited URL + command +
-digest; no acceptance criterion in this plan may require a `/var/tmp` or
-`/nas` path to exist.
+**Probe artifacts are not part of this document, and are not acceptance
+artifacts.** Transient copies of the downloads behind V8/V17/V19/V20 were
+relocated to `/nas/Temp/artifacts/py7zip-probes-20261011/` (outside Git;
+GC-eligible scratch). Every fact above is reproducible from the cited
+URL + command + digest. Classification rule: fixed host paths appearing in
+evidence rows (e.g. V2's wheel under `/var/tmp`) describe historical probe
+runs only — they are evidence, never requirements. **No acceptance
+criterion in this plan may require a `/var/tmp` or `/nas` path to exist**,
+and every acceptance command that produces files must create runner-owned
+scratch itself (`mktemp -d`, honoring `TMPDIR`), as §6 OVH-01 now does.
 
 ## 3. Fact register
 
@@ -134,8 +211,9 @@ digest; no acceptance criterion in this plan may require a `/var/tmp` or
 5. Offline suite is genuinely offline: `tests/conftest.py` denies sockets;
    import hygiene is enforced in a clean interpreter
    (`tests/test_import_hygiene.py`); root package exports nothing (pinned).
-6. `requests` remains a hard dependency solely for the legacy version probe
-   (`py7zip/py7zip.py:9,85–115`); the safe runtime is stdlib-only
+6. `requests` remains a hard dependency solely for the legacy runtime — the
+   version probe (`py7zip/py7zip.py:9,84–114`) and `setup()`'s exception
+   clause (`py7zip/py7zip.py:123`); the safe runtime is stdlib-only
    (`acquisition.py` uses `urllib`).
 7. CI runs the offline suite on 3.9–3.13 (ubuntu-only) and builds/validates
    the wheel with isolated `python -m build` (`.github/workflows/ci.yml`);
@@ -265,8 +343,8 @@ plan is in the "Consumes" column.
 
 **Ledger rules.** IDs are assigned in plan-revision order; execution order
 is defined by the **Phase** column plus **Depends on**, never by row order
-(OVH-26–29 sit at the end of the table but execute inside P0/P1/P2).
-Decision tasks (**OVH-06–08, OVH-26–29**) and the **publication gate inside
+(OVH-26–30 sit at the end of the table but execute inside P0/P1/P2).
+Decision tasks (**OVH-06–08, OVH-26–30**) and the **publication gate inside
 OVH-21** are *gates*: a consuming task must not start until the decision
 record it depends on exists, and no phase may skip a gate — an implementer
 who reaches a gated task without its decision record stops and escalates to
@@ -275,8 +353,9 @@ the owner instead of proceeding on a default.
 ### 5.1 B0 critical path (what actually blocks the release)
 
 Release-blocking, and nothing else: **OVH-01 → OVH-02 → OVH-26 (audit D4
-receipt decision) → (OVH-03, OVH-04, OVH-05) → publication gate (audit
-P0.5/D3, taken inside OVH-21) → OVH-21.** OVH-21's dependency on OVH-20 is
+receipt decision) → (OVH-03, OVH-04) → publication gate (audit
+P0.5/D3, taken inside OVH-21) → OVH-21.** OVH-05 is **landed** (PR #22,
+`d606b75`) and no longer part of the open path. OVH-21's dependency on OVH-20 is
 **conditional**: it applies only if D-OVH-4 changes the packaging
 (platform wheels); if D-OVH-4 keeps the current no-binary wheel +
 official-fetch model, the release does not wait on the P1 spine at all
@@ -292,7 +371,7 @@ audit-line-integration decision (OVH-06) except where OVH-18 consumes it.
 | OVH-02 | P0 | Artifact provenance ledger (`bin/PROVENANCE.md`) | Sec | — | P0.4 |
 | OVH-03 | P0 | Docs truth-pass (docs/USAGE, docs/FEATURES, docs/SETUP) | Docs | — | P0.2 |
 | OVH-04 | P0 | Platform-claim reconciliation (README checklist) | Docs+Maint | OVH-02, OVH-26 | P0.1 |
-| OVH-05 | P0 | Fix `get_binary_url()` safe-path bug | Impl | — | P0.3 |
+| OVH-05 | P0 | ~~Fix `get_binary_url()` safe-path bug~~ — **LANDED** (PR #22, `d606b75`) | Impl | — | P0.3 |
 | OVH-06 | P1 | Decision: integration strategy for audit line | Maint | — | new (D-OVH-1) |
 | OVH-07 | P1 | Decision: Windows bootstrap source | Maint | — | new (D-OVH-2) |
 | OVH-08 | P1 | Decision: Linux binary policy (7zz/7zzs/musl) | Maint+Sec | — | new (D-OVH-3) |
@@ -301,7 +380,7 @@ audit-line-integration decision (OVH-06) except where OVH-18 consumes it.
 | OVH-11 | P1 | Official acquisition + dual-channel verify + license install | Impl | OVH-09 (inherits OVH-29 via OVH-09) | P2.1 |
 | OVH-12 | P1 | Versioned cache, `update()`/`status()` API | Impl | OVH-11 | new |
 | OVH-13 | P1 | Windows acquisition path per OVH-07 | Impl | OVH-07, OVH-09 | new |
-| OVH-14 | P2 | Remove snapshot stubs + `cd` | Impl | — | P1.2 |
+| OVH-14 | P2 | Deprecate, then remove snapshot stubs + `cd` (two commits, §6) | Impl | OVH-30 | P1.2 |
 | OVH-15 | P2 | Root re-export `Py7zip`, `__version__` | Impl | OVH-14 | P1.3 |
 | OVH-16 | P2 | Options bridge decision + impl | Maint+Impl | — | P1.1, audit D5 |
 | OVH-17 | P2 | Local-binary discovery (PR #8 rework) + PR disposition *(post-B0; gated)* | Impl+Maint | OVH-14, OVH-28 | P1.4 (audit D2), P1.6 |
@@ -317,12 +396,13 @@ audit-line-integration decision (OVH-06) except where OVH-18 consumes it.
 | OVH-27 | P2 | **Gate:** legacy-runtime sunset window/removal version | Maint | — | audit D1 |
 | OVH-28 | P2 | **Gate:** local-binary precedence policy (PATH-discovered vs pinned-catalog-first) | Maint (security hat) | — | audit D2 |
 | OVH-29 | P1 | **Gate:** macOS support surface + provenance resolution (U3) before any darwin asset is pinned | Maint+Sec | OVH-02 | new (this doc, §3.2/V17–V19; D-OVH-6) |
+| OVH-30 | P2 | **Gate:** snapshot-family + `cd` removal version and window | Maint | — | new (this doc, revision 4; D-OVH-7) |
 
 Phase rationale: **P0** makes the tree releasable and truthful (B0
 prerequisites; all docs/test-only or one-line code fixes; includes the
 OVH-26 receipt gate). **P1** is the overhaul core — decisions before code
 (OVH-06/07/08/29), then the upstream-anchored acquisition spine. **P2**
-finishes the Pythonic API surface and unblocks legacy removal (OVH-27/28
+finishes the Pythonic API surface and unblocks legacy removal (OVH-27/28/30
 gates inside it). **P3** ships (B0 cleared; OVH-19 legacy sunset and OVH-20
 distribution decision land here, with OVH-20 gating OVH-21 only if
 packaging changes). **P4** hardens claims (CI lanes, receipts, safety
@@ -341,12 +421,14 @@ valid forms (`"Programming Language :: Python :: 3.9"` … `":: 3.14"`),
 and raise `Development Status :: 1 - Planning` → `:: 4 - Beta` (the safe
 runtime is default and tested; the current value misdescribes the
 package, V3).
-Acceptance (all must pass):
+Acceptance (all must pass; wheel outputs go to runner-owned scratch —
+`mktemp -d`, honoring `TMPDIR` — never a fixed `/var/tmp` path, §2.1):
 ```
-python3 -m pip wheel . --no-deps --no-build-isolation -w /var/tmp/ovh01a   # V4 must now succeed
-python3 -m pip wheel . --no-deps -w /var/tmp/ovh01b                        # V2 stays green
-python3 -m twine check /var/tmp/ovh01a/*.whl
-python3 -m pytest tests -p no:cacheprovider -q                             # 128 passed
+scratch="$(mktemp -d)"
+python3 -m pip wheel . --no-deps --no-build-isolation -w "$scratch/ovh01a"   # V4 must now succeed
+python3 -m pip wheel . --no-deps -w "$scratch/ovh01b"                        # V2 stays green
+python3 -m twine check "$scratch"/ovh01a/*.whl
+python3 -m pytest tests -p no:cacheprovider -q   # green; V1 recorded 128 at the 9d428da baseline, before PR #22 added one test
 ```
 Rollback: revert the single commit. Risk: none at runtime (metadata only).
 
@@ -361,9 +443,22 @@ assets, so the row records that TOFU caveat explicitly, §3.1 item 12);
 the macOS row records version 24.00 (static banner, V18) with
 provenance UNPROVEN and is adjudicated by gate **OVH-29**; the remaining
 rows follow the same archival procedure per artifact (V19 method).
+Reconcile `bin/INFO.md` in the same commit: it lists paths that do not
+exist on disk (`bin/win/arm/x86/7za.exe` at INFO.md:19,
+`bin/mac/arm/x32/7za` at INFO.md:31). The win/arm and mac/arm slots do
+exist on disk, but only as 0-byte placeholders at different names
+(`bin/win/arm/{x32,x64}/7za`, no `.exe`; `bin/mac/arm/{x64,x86}/7za` —
+§3.3, A.4), so no usable/non-empty artifact is present there either.
+Only the first pattern line (`./bin/{platform}/{type}/7za.{extension}`,
+INFO.md:6) drops the architecture level — the second line and the
+examples keep it (INFO.md:7, 9–11) — and the Linux example
+(`./bin/lin/arm/x86/7za`, INFO.md:10) disagrees with on-disk
+`bin/lin/arm/x32/7za`. The repo must not carry two conflicting
+inventories — correct it or supersede it via `bin/PROVENANCE.md`.
 Acceptance: `find bin -type f -size +0c | sort` has exactly one ledger
 row each, and any `UNKNOWN` row links the follow-up task (OVH-29 for the
-darwin row). Consumed later by OVH-09/11. Rollback: revert (docs only).
+darwin row); `bin/INFO.md` no longer contradicts the on-disk inventory.
+Consumed later by OVH-09/11. Rollback: revert (docs only).
 
 **OVH-03 — Docs truth-pass** per landed P0.2 (`docs/USAGE.md` import line,
 `docs/FEATURES.md` stub labeling, `docs/SETUP.md` publish flow). Acceptance:
@@ -375,11 +470,20 @@ on audit decision **D4** — wired here as gate OVH-26), now with OVH-02's
 ledger as the receipt source. Acceptance:
 `grep -n "\[x\]" README.md` returns only receipt-backed rows.
 
-**OVH-05 — `get_binary_url()` safe path** per landed P0.3 (F2: returns a
-nonexistent path on the default runtime). Prefer deprecation/delegate to
-`ensure_binary()`; keep legacy branch byte-identical; new pinning test in
-`tests/test_default_api.py`. Acceptance:
-`python3 -m pytest tests/test_default_api.py -q` plus full offline suite.
+**OVH-05 — `get_binary_url()` safe path — LANDED (PR #22, `d606b75`).**
+Per landed P0.3 (F2: returned a nonexistent fabricated cache-relative
+path on the default runtime). As merged, the safe path raises
+`NotImplementedError` directing callers to `download_binary()` or a
+pre-verified `binary_path=` constructor argument
+(`py7zip/py7zip.py:162–167`); the message never mentions
+`ensure_binary()` — the pinning test asserts `"ensure_binary" not in
+message` (`tests/test_default_api.py:50`) — a deliberate deviation from
+this spec's original "delegate to `ensure_binary()`" preference, keeping
+acquisition explicit instead of implicit on attribute access. The
+legacy branch stayed byte-identical and the pinning test
+`test_get_binary_url_raises_on_safe_runtime` landed at
+`tests/test_default_api.py:33` (with a `.github/CHANGELOG.md` entry).
+Nothing open; retained for the record and rollback history.
 
 ### P1 — official-upstream acquisition core (decisions first)
 
@@ -401,6 +505,21 @@ official extra package with ledgered provenance, (ii) bundle Windows
 binary in platform wheels (ties to OVH-20), (iii) document system-7z
 discovery for Windows. Deliverable: decision + rationale; OVH-13
 implements.
+**Bounded deadline:** D-OVH-2 is to be taken in the same maintainer pass
+that discharges gate OVH-26 (both turn on the same Windows-evidence
+question), and **no later than the OVH-09 catalog-freeze commit** — OVH-09
+must not pin a `windows/*` row whose asset source D-OVH-2 has not chosen
+(enforced by OVH-09's acceptance rule below, not by OVH-13's `Depends on`:
+OVH-13 consuming the decision stops only OVH-13, since OVH-09 depends on
+OVH-02/08/29 and could otherwise freeze an unchosen Windows row first).
+**Governed fallback while the decision is open:** the §1 "Windows on the
+B0 path" behavior — checksum-pinned repo-hosted binaries, provenance rows
+UNPROVEN in the OVH-02 ledger, no support claim, release-notes
+disclosure. The fallback may cover **at most the first release after B0
+clearance**; if D-OVH-2 is still unrecorded when a subsequent release is
+cut, that release's notes must carry an explicit "Windows
+upstream-acquisition decision overdue" notice and the gate escalates to
+the maintainer — the fallback is never silently re-extended.
 
 **OVH-08 — Linux binary policy (D-OVH-3).** Evidence: official Linux x64
 ships **dynamic `7zz` (glibc ≤ 2.16)** and **static `7zzs`** (V9).
@@ -417,7 +536,10 @@ the GitHub API `digest` field — the mechanism proven in V8), upstream
 URL. Include the wrapper's upstream-version pin and a `source_url()`
 helper. Tests: pure, offline, table-driven (`tests/test_platforms.py`
 style). Acceptance: `pytest tests/test_upstream.py -q` green offline;
-every catalog entry carries tag+digest+URL (no bare paths).
+every catalog entry carries tag+digest+URL (no bare paths); no
+`windows/*` entry may be pinned unless the D-OVH-2 decision record exists
+and names that entry's asset source — the enforcement point for §6
+OVH-07's bounded deadline, mirroring the darwin rule in OVH-29.
 
 **OVH-10 — libc detection + typed refusal.** Extend `PlatformInfo` with
 `libc` (values `glibc`/`musl`/`unknown`) detected without subprocess where
@@ -441,7 +563,14 @@ python3 -m pytest tests/test_acquisition.py tests/test_upstream.py -q    # offli
 python3 -m pytest tests -p no:cacheprovider -q                           # full offline suite green
 ```
 plus, as table-driven offline tests with a fake transport (extend
-`tests/fakes.py`, `FakeUrllibRequest` at `tests/fakes.py:126`):
+`tests/fakes.py`, `FakeUrllibRequest` at `tests/fakes.py:126`). The fake
+must be made **size-aware** first: `_Context.read()` accepts no size
+argument (`tests/fakes.py:150–151`) while production acquisition reads in
+`read(1024 * 1024)` chunks (`py7zip/acquisition.py:80`), so the fake's
+`read` must accept the optional size and serve the canned payload in
+chunks — or a chunking adapter must wrap it — for the tests below to
+exercise the real read pattern (test infrastructure only; the fake adds
+no product behavior):
 1. **Digest-mismatch fails closed, before install or use**: the fake
    transport serves a payload whose sha256 ≠ the catalog pin →
    `ArtifactIntegrityError` (`py7zip/acquisition.py:21`, raised by
@@ -458,6 +587,18 @@ plus, as table-driven offline tests with a fake transport (extend
    platform/architecture per `AGENTS.md` — the marker must be registered
    in `pyproject.toml` (`[tool.pytest.ini_options] markers = [...]`),
    since the suite runs with `--strict-markers` (`pyproject.toml:44`).
+
+**Gate status of env-guarded integration probes.** The probe is a
+deliverable of OVH-11 but **is not a gate** — not for OVH-11, not for
+OVH-21. The gates are the two offline acceptance commands plus the
+table-driven offline tests 1–2; the offline suite never sets the opt-in
+env var, and CI lanes must not set it. What OVH-11 must ship is the probe
+*existing*: registered marker, env-guarded, skipped by default. When a
+maintainer opts in on real hardware, the run's output becomes evidence
+for OVH-23 receipts under the `AGENTS.md` promotion rule — so an unrun
+probe blocks **support claims**, never the release. A probe run records
+exactly one of §6.2's enumerated rows.
+
 Rollback: revert the commit; the pre-existing acquisition tests
 (`tests/test_acquisition.py`, incl. `test_manager_rejects_corrupt_cached_artifact`
 at `tests/test_acquisition.py:48`) keep pinning current behavior.
@@ -477,11 +618,41 @@ per OVH-20; if (iii), documented discovery precedence.
 
 ### P2 — Pythonic API completion
 
-**OVH-14** remove `full/incremental/differential/snapshot` and `cd` (they
-are no-ops / process-global mutation; `docs/planning/COMPATIBILITY.md`
-already schedules this) — update characterization tests in the same
-commit. Acceptance:
-`python3 -c "from py7zip.py7zip import Py7zip; print([hasattr(Py7zip, m) for m in ('full','incremental','differential','snapshot','cd')])"` → all `False`.
+**OVH-14** deprecate, then remove `full/incremental/differential/snapshot`
+and `cd` (silent no-ops / process-global mutation;
+`docs/planning/COMPATIBILITY.md` already schedules this).
+**Why not direct removal:** every one of the five methods exists and is
+callable in the 0.6.2 sdist users actually run (V20 — `cd` l. 48,
+family l. 110–114), and PyPI users are still on 0.6.2 (V13). Direct
+removal converts today's silent success into an `AttributeError` on
+upgrade with no warning ever shown; the sequence below gives every
+upgrade path a visible signal while behavior is unchanged.
+**Commit 1 — deprecate:** keep all five methods with unchanged
+no-op/`chdir` behavior; each call emits `DeprecationWarning` naming the
+removal version recorded by gate **OVH-30** (verbatim from that record —
+no version is invented in code) and the migration (family: no
+replacement — they never did anything; `cd`: manage the working directory
+in caller code). Update the characterization pins in the same commit
+(`tests/test_characterization_wrapper.py:300–356`) to assert the warning
+via `pytest.warns` — never delete or weaken them (COMPATIBILITY.md rule
+3); note the suite runs with `filterwarnings = ["error"]`
+(`pyproject.toml:45`), so an unasserted warning fails the suite by
+design. Mirror both COMPATIBILITY.md migration rows in the same commit:
+the family row currently says the stubs are removed in Phase 4 with no
+window, while the `cd` row already prescribes deprecation before removal
+— both are harmonized here onto one deprecate-then-remove sequence.
+**Commit 2 — remove (next feature release):** delete the methods; update
+the same tests to pin absence; release notes carry the migration callout.
+Gate: commit 2 merges only after the deprecating release is verifiably on
+PyPI (re-run the OVH-21 enumeration commands), so no user can upgrade
+0.6.2 → removal without a deprecation-carrying release published in
+between.
+Acceptance, commit 1:
+`python3 -m pytest tests/test_characterization_wrapper.py -q` green with
+warning-asserting pins.
+Acceptance, commit 2:
+`python3 -c "from py7zip.py7zip import Py7zip; print([hasattr(Py7zip, m) for m in ('full','incremental','differential','snapshot','cd')])"` → all `False`,
+plus full offline suite green.
 
 **OVH-15** root re-export `py7zip.Py7zip`, `py7zip.__version__` (additive;
 update the pinned hygiene test in the same commit, never weaken silently).
@@ -560,18 +731,24 @@ that already exists, never overwrite, force-move, or delete a tag**
 (`git push --force` is prohibited; create with `git tag -s v<version>` —
 it fails if the ref exists, which is the guard — and verify with
 `git push --dry-run origin v<version>` before the real push). The
-`publish.yml` tag/version gate (`.github/workflows/publish.yml:28–38`)
+`publish.yml` tag/version gate (`.github/workflows/publish.yml:28–34`)
 must pass as-is.
 
-*Trusted publishing (resolves U4):* run a **trusted-publishing dry-run
-before the release** — repository setting *Settings → Environments →
-pypi* must show the trusted publisher, exercised via a
-`workflow_dispatch` run of `.github/workflows/publish.yml` against a test
-index if available, or verified by a maintainer in the PyPI project
-settings UI; either way the check and its log are attached to the release
-receipt (U4 is unknown: the workflow is written for trusted publishing,
-`.github/workflows/publish.yml:10` (`id-token: write`), but no publish
-has ever run).
+*Trusted publishing (resolves U4):* verify **before the release** that
+the repository setting *Settings → Environments → pypi* shows the trusted
+publisher. Note what a dry run can and cannot exercise:
+`workflow_dispatch` (`.github/workflows/publish.yml:6`) runs only the
+build and `twine check` steps — the tag gate and the PyPI publish step
+are both `if: github.event_name == 'release'`
+(`.github/workflows/publish.yml:29`, `:36`), so a dispatched run can
+never reach PyPI or exercise OIDC trusted publishing. The real
+pre-release check is therefore a maintainer verifying the trusted
+publisher in the PyPI project settings UI (a dispatched build/twine run
+is useful rehearsal but proves nothing about publishing); either way the
+check and its log are attached to the release receipt (U4 is unknown: the
+workflow is written for trusted publishing, `.github/workflows/publish.yml:10`
+(`id-token: write`), but no publish has ever run — the release run itself
+is the first end-to-end exercise).
 
 *Receipts* per `AGENTS.md` promotion rule (commit, Python, OS/arch,
 binary provenance, test results, skipped lanes). Acceptance:
@@ -597,8 +774,15 @@ GitHub Actions is the fallback).
 **OVH-24** extraction-safety policy (symlink members, overwrite,
 partial-output) — document scope as member-path-traversal rejection unless
 a link audit is implemented; tests for whatever is claimed.
-**OVH-25** `SECURITY.md`, support-policy page (tiers from
-`docs/planning/PLATFORM_MATRIX.md`), fix/drop dead `Project Page` URL
+**OVH-25** `SECURITY.md`, support-policy page (tier **definitions** from
+`docs/planning/PLATFORM_MATRIX.md` — only its Tested / Best effort /
+Not supported definitions are authoritative; that document's host rows
+are Phase 0 historical and contradicted by the current
+classifier/catalog, e.g. it refuses Linux aarch64 and routes macOS arm64
+to `bin/mac/arm/x64/7za`, while `ArtifactCatalog` today maps aarch64 →
+`bin/lin/arm/x64/7za` and every darwin row → `bin/mac/any/7za`
+(`py7zip/platforms.py:95–106`) — support rows come from §6.2, never from
+that matrix), fix/drop dead `Project Page` URL
 (F14), release process single-sourced.
 
 ### 6.1 Gate task specifications
@@ -627,7 +811,7 @@ Files: decision record in `docs/planning/` (row mirrored into
 `docs/planning/COMPATIBILITY.md` in the OVH-19 commit, not before).
 Deliverable: the removal version and deprecation window for `legacy=True`,
 deciding when `requests` can be dropped (audit F8). Evidence to weigh:
-safe runtime is already default (`legacy=False`, `py7zip/py7zip.py:24`),
+safe runtime is already default (`legacy=False`, `py7zip/py7zip.py:23`),
 PyPI users are
 still on 0.6.2 (V13) so no released user depends on the current
 `legacy=True` flag shape.
@@ -671,6 +855,52 @@ darwin entry whose provenance is neither (a) nor (b).
 Rollback: docs-only revert; re-acquisition path (b) additionally reverts
 the catalog commit.
 
+**OVH-30 — Gate (P2): snapshot-family + `cd` removal version and window
+(D-OVH-7).** Owner: Maint. Files: decision record in `docs/planning/`
+(the version is mirrored into the `docs/planning/COMPATIBILITY.md` rows
+by OVH-14 commit 1, not before). Deliverable: the removal version the
+OVH-14 `DeprecationWarning`s announce, plus the deprecation window — the
+earliest release eligible for OVH-14 commit 2, which must be strictly
+later than the release carrying the warnings (OVH-14's own gate: the
+deprecating release verifiably on PyPI first). The chosen version must
+survive OVH-21's occupied-version enumeration (never collide with a
+published or tagged version). Evidence to weigh: PyPI users are still on
+0.6.2, which already ships all five methods (V13, V20), so the window
+must span at least one published deprecation-carrying release. This gate
+exists because OVH-14's warning text needs a version and no other
+decision selects one (OVH-27 covers `legacy=True`, not the stubs).
+Acceptance: a recorded version + window; OVH-14 commit 1 is blocked
+without it, and the warning text must quote the recorded version
+verbatim. Rollback: revise the record (a decision, not code).
+
+### 6.2 Supported platform/architecture rows (acceptance binding)
+
+These are the only rows acceptance criteria and claims may refer to —
+exactly what `ArtifactCatalog` resolves today (`py7zip/platforms.py:95–106`)
+plus its typed refusals. Any receipt, README check, or catalog entry
+outside this table would promote a claim this plan has not authorized.
+
+| Row (`system/family/architecture`) | Artifact resolved | Provenance state | Bound to |
+|------------------------------------|-------------------|------------------|----------|
+| `linux/pc/x64` | `bin/lin/pc/x64/7za` | **Anchored** — byte-identical to official 24.00 `7zz` (§3.1 item 12) | OVH-02 row |
+| `linux/pc/x86` | `bin/lin/pc/x86/7za` | UNPROVEN until ledgered | OVH-02 |
+| `linux/arm/x64` | `bin/lin/arm/x64/7za` | UNPROVEN until ledgered | OVH-02 |
+| `linux/arm/x32` | `bin/lin/arm/x32/7za` | UNPROVEN until ledgered | OVH-02 |
+| `windows/pc/x64` | `bin/win/pc/x64/7za.exe` | UNPROVEN; §1 B0 fallback behavior applies | OVH-02; D-OVH-2 |
+| `windows/pc/x86` | `bin/win/pc/x86/7za.exe` | UNPROVEN; §1 B0 fallback behavior applies | OVH-02; D-OVH-2 |
+| `darwin/pc/x64` | `bin/mac/any/7za` (universal) | version-evidenced 24.00, provenance UNPROVEN (V18/V19) | OVH-29 adjudicates |
+| `darwin/pc/x86` | `bin/mac/any/7za` (universal) | same artifact as above | OVH-29 |
+| `darwin/arm/x64` | `bin/mac/any/7za` (universal) | same artifact as above | OVH-29 |
+| `windows/arm/*`, `darwin/arm/x32`, any system outside {`linux`, `windows`, `darwin`} | **none — typed `UnsupportedPlatformError`** | refusal, documented (§3.3) | OVH-03 states it; no claim |
+
+Bindings: **OVH-04** reconciles README rows 1:1 against this table — a
+README line with no row above gets unchecked; **OVH-09** must carry an
+entry or an explicit refusal for every row above, including the libc
+dimension once OVH-08/10 land; **OVH-11**'s opt-in probe records exactly
+one of these rows per `AGENTS.md`; **OVH-23** receipts are valid only for
+rows executed on CI hardware. A lane or receipt for a row not in this
+table is out of scope by definition.
+
 ## 7. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
@@ -678,7 +908,7 @@ the catalog commit.
 | B0 persists while overhaul work continues; users keep receiving 0.6.2 | High | Reputation/security | P0 is deliberately small; OVH-21 is gated only by the §5.1 critical path (default ship at P3, fast path after P0 + D3) |
 | Audit-line integration conflicts (duplicate commits, same files: `py7zip.py`, workflows, pyproject) | High | Rework | OVH-06 decision + conflict inventory before any port |
 | Phase4 dirty worktree refreshes `bin/` concurrently with OVH-02/09/11 | Medium | Clobbered work / confused provenance | `bin/` frozen for this plan until that effort lands or is dispositioned (D-OVH-5); it is read-only to this handoff |
-| Windows bootstrap complexity delays parity | Medium | Feature gap | OVH-07 decision allows repo-hosted stopgap with ledgered provenance |
+| Windows bootstrap complexity delays parity | Medium | Feature gap | OVH-07 bounded deadline + escalation (§6); the §1 governed fallback covers at most the first post-B0 release and is never silently re-extended |
 | musl users lose support if dynamic binary chosen | Low | Support burden | OVH-08 recommends static `7zzs` — no libc constraint |
 | Upstream release churn invalidates pins | Medium | Availability | Pins are per-wrapper-release; `update()` is explicit; digest mismatch fails loudly, never silently — proven by OVH-11 acceptance test 1 (offline tampered-payload → `ArtifactIntegrityError` before install/use) |
 | Release version/tag collides with the audit line's published v0.8.0/v0.9.0 (tags on both remotes + GitHub Releases with assets, V14/V15) | High if unaddressed | Failed release or tag overwrite | OVH-21 selection procedure: enumerate PyPI + both remotes + GitHub Releases, take smallest unused, `git tag -s` fails on existing ref, `--dry-run` before push, force-move prohibited |
@@ -694,7 +924,9 @@ This plan's decisions:
 
 - **D-OVH-1** audit-line integration strategy (OVH-06; consumes: OVH-18,
   partly OVH-17).
-- **D-OVH-2** Windows acquisition source (OVH-07; consumes: OVH-13).
+- **D-OVH-2** Windows acquisition source (OVH-07; consumes: OVH-09
+  `windows/*` rows, OVH-13; bounded deadline + governed fallback:
+  §6 OVH-07).
 - **D-OVH-3** Linux binary policy: static `7zzs` default recommended
   (OVH-08; consumes: OVH-09/10/11/13).
 - **D-OVH-4** distribution model: runtime-fetch vs platform wheels
@@ -703,6 +935,8 @@ This plan's decisions:
   upstream-anchored re-acquisition (they overlap; sequence before OVH-09).
 - **D-OVH-6** macOS support surface + provenance resolution (OVH-29;
   consumes: OVH-09 darwin entries, OVH-11 darwin acquisition).
+- **D-OVH-7** snapshot-family + `cd` removal version and window (OVH-30;
+  consumes: OVH-14).
 
 Landed audit's decisions (audit §10), each wired to a gate task:
 
@@ -741,11 +975,14 @@ Source: `docs/handoffs/PLATFORM_ARCHITECTURE_PY7ZIP_2026-10-10.md` §10.
 
 **Do OVH-01 only** (classifier fix + status bump, §6): metadata-only,
 four acceptance commands, zero runtime risk, unblocks both CI packaging
-and the release train. Then bring OVH-02 (provenance ledger) to the
-maintainer with the V5–V9 evidence above — OVH-02 now has a head start:
-the Linux x64 row can cite the byte-identity anchor (§3.1 item 12), and
-the macOS row feeds gate OVH-29. In the same maintainer pass, get **OVH-26
-(audit D4)** answered — OVH-04 cannot start without it (§5 rules).
+and the release train. OVH-05 is already done (PR #22, `d606b75`), so
+OVH-01 is the only remaining mechanical P0 task. Then bring OVH-02
+(provenance ledger) to the maintainer with the V5–V9 evidence above —
+OVH-02 now has a head start: the Linux x64 row can cite the byte-identity
+anchor (§3.1 item 12), and the macOS row feeds gate OVH-29. In the same
+maintainer pass, get **OVH-26 (audit D4)** answered and take **D-OVH-2**
+(its bounded deadline rides on this pass, §6 OVH-07) — OVH-04 cannot
+start without OVH-26 (§5 rules).
 
 ---
 
