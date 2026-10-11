@@ -444,10 +444,17 @@ the macOS row records version 24.00 (static banner, V18) with
 provenance UNPROVEN and is adjudicated by gate **OVH-29**; the remaining
 rows follow the same archival procedure per artifact (V19 method).
 Reconcile `bin/INFO.md` in the same commit: it lists paths that do not
-exist (`bin/win/arm/x86/7za.exe`, `bin/mac/arm/x32/7za`) and its
-`./bin/{platform}/{type}/…` convention drops the architecture level, so
-the repo must not carry two conflicting inventories — correct it or
-supersede it via `bin/PROVENANCE.md`.
+exist on disk (`bin/win/arm/x86/7za.exe` at INFO.md:19,
+`bin/mac/arm/x32/7za` at INFO.md:31). The win/arm and mac/arm slots do
+exist on disk, but only as 0-byte placeholders at different names
+(`bin/win/arm/{x32,x64}/7za`, no `.exe`; `bin/mac/arm/{x64,x86}/7za` —
+§3.3, A.4), so no usable/non-empty artifact is present there either.
+Only the first pattern line (`./bin/{platform}/{type}/7za.{extension}`,
+INFO.md:6) drops the architecture level — the second line and the
+examples keep it (INFO.md:7, 9–11) — and the Linux example
+(`./bin/lin/arm/x86/7za`, INFO.md:10) disagrees with on-disk
+`bin/lin/arm/x32/7za`. The repo must not carry two conflicting
+inventories — correct it or supersede it via `bin/PROVENANCE.md`.
 Acceptance: `find bin -type f -size +0c | sort` has exactly one ledger
 row each, and any `UNKNOWN` row links the follow-up task (OVH-29 for the
 darwin row); `bin/INFO.md` no longer contradicts the on-disk inventory.
@@ -466,12 +473,15 @@ ledger as the receipt source. Acceptance:
 **OVH-05 — `get_binary_url()` safe path — LANDED (PR #22, `d606b75`).**
 Per landed P0.3 (F2: returned a nonexistent fabricated cache-relative
 path on the default runtime). As merged, the safe path raises
-`NotImplementedError` directing callers to `download_binary()`/
-`ensure_binary()` or a pre-verified `binary_path=` constructor argument —
-a deliberate deviation from this spec's original "delegate to
-`ensure_binary()`" preference, keeping acquisition explicit instead of
-implicit on attribute access. The legacy branch stayed byte-identical and
-the pinning test `test_get_binary_url_raises_on_safe_runtime` landed at
+`NotImplementedError` directing callers to `download_binary()` or a
+pre-verified `binary_path=` constructor argument
+(`py7zip/py7zip.py:162–167`); the message never mentions
+`ensure_binary()` — the pinning test asserts `"ensure_binary" not in
+message` (`tests/test_default_api.py:50`) — a deliberate deviation from
+this spec's original "delegate to `ensure_binary()`" preference, keeping
+acquisition explicit instead of implicit on attribute access. The
+legacy branch stayed byte-identical and the pinning test
+`test_get_binary_url_raises_on_safe_runtime` landed at
 `tests/test_default_api.py:33` (with a `.github/CHANGELOG.md` entry).
 Nothing open; retained for the record and rollback history.
 
