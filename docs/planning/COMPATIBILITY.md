@@ -82,6 +82,7 @@ features and are removed in Phase 4.
 | `wrapper(src, dst, options, method)` shell string | argv-based, typed options | Replace any free-text options string with the typed structure or explicit sequence. |
 | Ignoring the return value of `compress` / `decompress` | a structured `ArchiveResult` | Inspect the result or catch the typed error; failures will no longer be silent. |
 | `full`, `incremental`, `differential`, `snapshot` | removed | Stop calling them. They have never done anything. |
+| `Py7zip.cd` (process-wide `chdir`) | deprecated, then removed | Manage the working directory in caller code (`os.chdir` / `contextlib.chdir`) or pass explicit paths; `cd` mutates process-global state and is not part of the wrapper's archive contract. |
 | `pip install py7zip` gaining a `py7zip-setup` console script | removed | The entry point called a bound instance method with no arguments and raised `TypeError` every time. It never worked. |
 | `requests` as an install dependency | removed | The only consumer was the removed version probe. Nothing else in the package imports it. |
 
