@@ -147,7 +147,7 @@ class Py7zip:
         """Return the source location for the platform's 7-Zip binary.
 
         On the safe runtime (default), binary acquisition is explicit:
-        callers must invoke :meth:`ensure_binary` (or supply a
+        callers must invoke :meth:`download_binary` (or supply a
         pre-verified ``binary_path``) before using the wrapper. This
         method raises :class:`NotImplementedError` rather than returning
         a fabricated cache-relative path, because the safe runtime does
@@ -161,7 +161,7 @@ class Py7zip:
         if not self.legacy:
             raise NotImplementedError(
                 "get_binary_url() is not supported on the safe runtime; "
-                "call ensure_binary() to acquire a verified binary into "
+                "call download_binary() to acquire a verified binary into "
                 "the cache directory, or supply a pre-verified "
                 "binary_path=... to the constructor."
             )

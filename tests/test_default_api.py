@@ -36,13 +36,18 @@ def test_get_binary_url_raises_on_safe_runtime(tmp_path):
     Per the F2 finding in the platform-architecture audit, the safe
     runtime previously returned a fabricated cache-relative path that
     did not correspond to any real download. Acquisition is now
-    explicit via ``ensure_binary()``; this method raises a typed
-    error pointing callers at the correct API.
+    explicit via the public ``download_binary()`` entry point; this
+    method raises a typed error pointing callers at that API rather
+    than the internal ``SafePy7zip.ensure_binary()``.
     """
     wrapper = Py7zip(cache_dir=tmp_path)
 
-    with pytest.raises(NotImplementedError, match="ensure_binary"):
+    with pytest.raises(NotImplementedError) as excinfo:
         wrapper.get_binary_url()
+
+    message = str(excinfo.value)
+    assert "download_binary()" in message
+    assert "ensure_binary" not in message
 
 
 def test_legacy_mode_is_explicit():
