@@ -13,6 +13,9 @@
   `NotImplementedError` directing callers to the public `download_binary()`
   entry point instead of returning a fabricated cache-relative path
   (OVH-05).
+- Added a strict `mypy` gate (`strict = true`, Python 3.9 target) over the
+  `py7zip` runtime package with a matching CI lane, and annotated the
+  wrapper's public methods without changing runtime behavior.
 
 ## 0.7.3
 

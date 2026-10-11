@@ -1,30 +1,41 @@
+from __future__ import annotations
+
 import os
 import platform
 import re
 import subprocess
 import urllib.request
+from collections.abc import Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
+from pathlib import Path
 
 import requests
 
-from .safe import SafePy7zip
+from .platforms import PlatformInfo
+from .safe import ArchiveResult, SafePy7zip
 
 
 class Py7zip:
     """An unofficial, cross-platform, lightweight, and easy-to-use wrapper
     for 7zip command-line binaries (7za) in Python."""
 
+    # The safe runtime stores a verified Path (or None before acquisition);
+    # the legacy runtime stores the historical in-package path as a str.
+    binary_path: str | Path | None
+    platform_info: PlatformInfo
+    _safe: SafePy7zip
+
     def __init__(
         self,
-        verbose=False,
-        debug=False,
+        verbose: bool = False,
+        debug: bool = False,
         *,
-        legacy=False,
-        cache_dir=None,
-        binary_path=None,
-        timeout=300.0,
-    ):
+        legacy: bool = False,
+        cache_dir: str | os.PathLike[str] | None = None,
+        binary_path: str | os.PathLike[str] | None = None,
+        timeout: float = 300.0,
+    ) -> None:
         """Initializes the class and variables."""
         self.verbose = verbose
         self.debug = debug
@@ -75,13 +86,13 @@ class Py7zip:
         self.setup()
 
     @staticmethod
-    def _metadata_version():
+    def _metadata_version() -> str:
         try:
             return package_version("py7zip")
         except PackageNotFoundError:
             return "0.7.3"
 
-    def get_version(self, verbose=False):
+    def get_version(self, verbose: bool = False) -> str:
         """Construct the URL to fetch CHANGELOG.md and find the version number."""
         if not self.legacy:
             return self._metadata_version()
@@ -113,37 +124,46 @@ class Py7zip:
 
         return version
 
-    def setup(self):
+    def setup(self) -> None:
         """Checks the system for prerequisites and performs the required steps."""
         if not self.legacy:
             return
+        # Only the legacy branch reaches here, and legacy __init__ always
+        # assigns binary_path a str.
+        binary_path = self.binary_path
+        assert binary_path is not None
         try:
-            if not os.path.exists(self.binary_path):
+            if not os.path.exists(binary_path):
                 self.download_binary()
         except (OSError, requests.RequestException) as err:
             print(err)
 
     @staticmethod
-    def cd(directory_path):
+    def cd(directory_path: str | os.PathLike[str]) -> None:
         os.chdir(directory_path)
 
-    def download_binary(self):
+    def download_binary(self) -> Path | None:
         """Dynamically downloads the binary required for the given platform."""
         if not self.legacy:
             self.binary_path = self._safe.ensure_binary()
             return self.binary_path
+        # Only the legacy branch reaches here, and legacy __init__ always
+        # assigns binary_path a str.
+        binary_path = self.binary_path
+        assert binary_path is not None
         binary_url = self.get_binary_url()
-        binary_dir = os.path.dirname(self.binary_path)
+        binary_dir = os.path.dirname(binary_path)
         os.makedirs(binary_dir, exist_ok=True)
 
         with (
             urllib.request.urlopen(binary_url) as response,
-            open(self.binary_path, "wb") as out_file,
+            open(binary_path, "wb") as out_file,
         ):
             out_file.write(response.read())
-            os.chmod(self.binary_path, 0o755)
+            os.chmod(binary_path, 0o755)
+        return None
 
-    def get_binary_url(self):
+    def get_binary_url(self) -> str:
         """Return the source location for the platform's 7-Zip binary.
 
         On the safe runtime (default), binary acquisition is explicit:
@@ -169,7 +189,13 @@ class Py7zip:
             raise NotImplementedError(f"Platform '{self.platform}' is not supported.")
         return self.url
 
-    def wrapper(self, src, dst, options="", method="decompress"):
+    def wrapper(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+        method: str = "decompress",
+    ) -> ArchiveResult | None:
         """Method used to extract an archive."""
         if not self.legacy:
             operation = "compress" if method == "compress" else "decompress"
@@ -188,11 +214,11 @@ class Py7zip:
             error_msg = f"Failed to create backup from '{src}' to '{dst}'."
 
         try:
-            result = subprocess.run(
+            completed = subprocess.run(
                 command, capture_output=True, text=True, shell=True, check=True
             )
             if self.debug:
-                print(result.stdout)
+                print(completed.stdout)
             if self.verbose:
                 print(success_msg)
         except subprocess.CalledProcessError as e:
@@ -200,37 +226,83 @@ class Py7zip:
                 print(f"Error: {e.stderr}.")
             if self.verbose:
                 print(error_msg)
+        return None
 
-    def decompress(self, src, dst, options=""):
+    def decompress(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> ArchiveResult | None:
         """Method used to extract an archive."""
         return self.wrapper(src, dst, options=options, method="decompress")
 
-    def extract(self, src, dst, options=""):
+    def extract(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> ArchiveResult | None:
         """Alias used for 'decompress' method."""
         return self.wrapper(src, dst, options=options, method="decompress")
 
-    def compress(self, src, dst, options=""):
+    def compress(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> ArchiveResult | None:
         """Method used to backup files, folders, or directories to an archive."""
         return self.wrapper(src, dst, options=options, method="compress")
 
-    def archive(self, src, dst, options=""):
+    def archive(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> ArchiveResult | None:
         """Alias used for compress method."""
         return self.wrapper(src, dst, options=options, method="compress")
 
-    def backup(self, src, dst, options=""):
+    def backup(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> ArchiveResult | None:
         """Alias used for compress method."""
         return self.wrapper(src, dst, options=options, method="compress")
 
-    def full(self, src, dst, options=""):
+    def full(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> None:
         return
 
-    def incremental(self, src, dst, options=""):
+    def incremental(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> None:
         return
 
-    def differential(self, src, dst, options=""):
+    def differential(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> None:
         return
 
-    def snapshot(self, src, dst, options=""):
+    def snapshot(
+        self,
+        src: str | os.PathLike[str],
+        dst: str | os.PathLike[str],
+        options: str | Sequence[str] = "",
+    ) -> None:
         """Streamlines the process for creating a snapshot."""
         return
 

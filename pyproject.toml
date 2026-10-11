@@ -43,3 +43,12 @@ minversion = "8.0"
 testpaths = ["tests"]
 addopts = "-q --strict-markers --strict-config"
 filterwarnings = ["error"]
+
+[tool.mypy]
+# The runtime package is checked strictly under the oldest supported
+# interpreter (requires-python >= 3.9), so the gate fails on any stdlib or
+# syntax drift that would not load on 3.9.  mypy 2.x dropped the 3.9
+# target, hence the <2 constraint in CI.
+python_version = "3.9"
+strict = true
+files = ["py7zip"]
