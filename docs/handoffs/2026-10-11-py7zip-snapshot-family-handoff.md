@@ -1,4 +1,4 @@
-# py7zip snapshot-family handoff — 2026-10-12
+# py7zip snapshot-family handoff — 2026-10-11
 
 **Scope:** the public no-op methods `Py7zip.full`, `Py7zip.incremental`,
 `Py7zip.differential`, `Py7zip.snapshot` (the "snapshot family") — current
