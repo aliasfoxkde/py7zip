@@ -9,6 +9,10 @@
   the package version; publishing uses PyPI trusted publishing.
 - Made the safe runtime the default while retaining the legacy runtime only
   behind an explicit migration flag.
+- Changed the safe runtime's `Py7zip.get_binary_url()` to raise
+  `NotImplementedError` directing callers to the public `download_binary()`
+  entry point instead of returning a fabricated cache-relative path
+  (OVH-05).
 
 ## 0.7.3
 

@@ -8,7 +8,6 @@ from importlib.metadata import version as package_version
 
 import requests
 
-from .platforms import ArtifactCatalog
 from .safe import SafePy7zip
 
 
@@ -145,10 +144,27 @@ class Py7zip:
             os.chmod(self.binary_path, 0o755)
 
     def get_binary_url(self):
-        """Dynamically gets the URL of the required system binary."""
+        """Return the source location for the platform's 7-Zip binary.
+
+        On the safe runtime (default), binary acquisition is explicit:
+        callers must invoke :meth:`download_binary` (or supply a
+        pre-verified ``binary_path``) before using the wrapper. This
+        method raises :class:`NotImplementedError` rather than returning
+        a fabricated cache-relative path, because the safe runtime does
+        not construct download URLs at construction time.
+
+        On the legacy runtime (``legacy=True``), returns the URL where
+        the historical in-package binary would have been served from,
+        or raises :class:`NotImplementedError` for unsupported host
+        platforms.
+        """
         if not self.legacy:
-            spec = ArtifactCatalog.resolve(self.platform_info)
-            return f"{self._safe.cache_dir}/{spec.relative_path}"
+            raise NotImplementedError(
+                "get_binary_url() is not supported on the safe runtime; "
+                "call download_binary() to acquire a verified binary into "
+                "the cache directory, or supply a pre-verified "
+                "binary_path=... to the constructor."
+            )
         if self.platform not in self.supported:
             raise NotImplementedError(f"Platform '{self.platform}' is not supported.")
         return self.url

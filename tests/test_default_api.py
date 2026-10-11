@@ -30,6 +30,26 @@ def test_default_aliases_require_individual_option_arguments(tmp_path):
         wrapper.compress("source", "destination", options="-y")
 
 
+def test_get_binary_url_raises_on_safe_runtime(tmp_path):
+    """The safe runtime exposes acquisition, not download URLs.
+
+    Per the F2 finding in the platform-architecture audit, the safe
+    runtime previously returned a fabricated cache-relative path that
+    did not correspond to any real download. Acquisition is now
+    explicit via the public ``download_binary()`` entry point; this
+    method raises a typed error pointing callers at that API rather
+    than the internal ``SafePy7zip.ensure_binary()``.
+    """
+    wrapper = Py7zip(cache_dir=tmp_path)
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        wrapper.get_binary_url()
+
+    message = str(excinfo.value)
+    assert "download_binary()" in message
+    assert "ensure_binary" not in message
+
+
 def test_legacy_mode_is_explicit():
     assert "legacy" in Py7zip.__init__.__code__.co_varnames
     assert ArchiveRunner is not None
