@@ -31,6 +31,18 @@ Non-negotiables from `AGENTS.md`: preserve the public `Py7zip` API and MIT licen
 wrapper; keep 7-Zip upstream license notices with any distributed binary; never claim platform
 support without a recorded receipt (exact Python/OS/arch/provenance/result).
 
+**Recorded exception to the API-preservation non-negotiable (P1.2 scope).** `AGENTS.md` defines
+no exception to API preservation, so one is recorded here rather than left implicit (per
+`docs/planning/COMPATIBILITY.md`'s purpose: each break is a recorded decision, not an accident).
+P1.2 may remove exactly two public surfaces and no others: (a) the four no-op stubs
+`full`/`incremental`/`differential`/`snapshot`, whose removal COMPATIBILITY.md ("The snapshot
+family") already schedules, and (b) `Py7zip.cd`. The `cd` migration decision: **deprecate on the
+next release, remove after the deprecation window; no context-manager replacement** — `cd`
+mutates process-global cwd and contributes nothing to the wrapper's archive contract, so callers
+manage their own working directory (`os.chdir`/`contextlib.chdir`) or pass explicit paths. This
+decision is mirrored as a `cd` row in the COMPATIBILITY.md migration map so the map is complete
+before P1.2 executes. Any further public-API removal needs a new recorded exception.
+
 ## 3. Current-state scorecard
 
 Ratings are advisory engineering judgments over OBSERVED evidence; they are not
@@ -73,6 +85,21 @@ and resolves it against a catalog of exactly 7 artifacts with pinned SHA-256 and
 Independently verified in this slice: `sha256sum` of all files under `bin/` matches the catalog
 7/7; the other 6 `bin/` entries (`bin/win/arm/*`, `bin/mac/pc/*`, `bin/mac/arm/*`) are 0-byte
 placeholders the catalog correctly excludes.
+
+Full digests of every non-empty file under `bin/` — the 7 catalog artifacts plus `bin/INFO.md`,
+which is documentation rather than a catalog artifact — re-verified in this worktree via
+`find bin -type f -size +0c -exec sha256sum {} +`:
+
+```text
+12ef12519899ecda8ba59940d7f25a3f4818c97693538d49e894e6b783fb3081  bin/lin/pc/x64/7za
+ca0950c6d4b6e4ed2c7d0d1759b2beb68aecaf95ed31d9e5c1ae9faa914c37b9  bin/lin/pc/x86/7za
+1414d731e764b969c22dae77d3948c6f0d1fca7b33eb7a16d016038e4e8ea753  bin/lin/arm/x32/7za
+271f123d64fb339f3011388005ff781958e4c17b9eb781e4d7a7b38712808a41  bin/lin/arm/x64/7za
+c76d80526586c039e11d9d2ea8fe02324798c5082711178304b5060565859742  bin/mac/any/7za
+58ad6b9d148b95f4b5353111f5640db3a77dd2121e6269f4b2b19fb0cc563dc7  bin/INFO.md
+827f88db392fbb679ca0dcf0818f32e74b59242061d0e6bc05bac9c672bbde51  bin/win/pc/x64/7za.exe
+4721caf434de02b9aeb80b930702bbca75a1d54a5308c3445ec0db0778cfe693  bin/win/pc/x86/7za.exe
+```
 
 ### 4.3 Acquisition
 
@@ -131,10 +158,10 @@ runtime. PyPI (checked 2026-10-10): latest published version **0.6.2** (releases
 | F8 | Low (dependency) | `requests` is installed by every consumer solely so the legacy runtime can fetch `docs/CHANGELOG.md` over HTTPS for `__version__` (`py7zip/py7zip.py:9, 93`). The safe runtime uses stdlib only. Drop when legacy retires (P1.5). | Files cited |
 | F9 | Medium (CI) | Test matrix is ubuntu-only although the suite is offline and OS-portable; no Windows/macOS lane catches path/`os.replace`/`shutil` regressions. Python 3.14 is advertised by classifier (`pyproject.toml:30`) but absent from the CI matrix (3.9–3.13). | `.github/workflows/ci.yml:18–22` |
 | F10 | Low (docs drift) | `docs/planning/COMPATIBILITY.md:30–35` states "Every alias discards the caller's `options` argument". Current source forwards `options=options` in all five aliases (`py7zip/py7zip.py:188–206`) and the current suite pins "legacy aliases forward the caller's options" (`tests/test_characterization_wrapper.py:266`). The Phase-0 description no longer matches the code it describes. | Files cited |
-| F11 | Medium (policy) | No `SECURITY.md`, `CONTRIBUTING.md`, or `CODE_OF_CONDUCT` anywhere in the repo — for a package whose whole security story is "how binaries are acquired and executed". | `ls .github/` (only `CHANGELOG.md`, `workflows/`) |
+| F11 | Medium (policy) | No tracked `SECURITY.md`, `CONTRIBUTING.md`, or `CODE_OF_CONDUCT` in the repository — for a package whose whole security story is "how binaries are acquired and executed". | `git ls-files \| rg '(^|/)(SECURITY\|CONTRIBUTING\|CODE_OF_CONDUCT)\.md$'` — no tracked matches (56 tracked files; re-verified 2026-10-10; a case-insensitive, any-extension variant also returns nothing) |
 | F12 | Medium (safety limit) | Extraction safety validates member *names* only (`py7zip/safe.py:124–144`). Symlink/special-file members, overwrite behavior, and partial-output-on-failure policy are neither handled in code nor documented. Do not claim "safe extraction" beyond traversal-name rejection until investigated (P2.4). | File cited; no doc statement found |
 | F13 | Low (docs) | README's install note ("when using `pip install` … only the binary for the given system is included", `README.md:60–62`) is wrong for current packaging: the wheel ships no binaries at all (`pyproject.toml:38–39`); acquisition downloads at runtime. | Files cited |
-| F14 | Low | `Project Page` = `https://py7zip.cyopsys.com` (`pyproject.toml:36`): `curl -sI` returned exit 0 with an **empty header block** on 2026-10-10 — not a usable page. Matches the open bug in `docs/PLANNING.md:46`. | This slice's command log (§9) |
+| F14 | Low | `Project Page` = `https://py7zip.cyopsys.com` (`pyproject.toml:36`): a normal GET re-run for the review-resolution slice returned `curl: (6) Could not resolve host: py7zip.cyopsys.com` (HTTP 000; 0 bytes; exit 6) — not a usable page in that check (the original slice's `curl -sI` had returned exit 0 with an empty header block). Control HEAD to `https://pypi.org` returned HTTP 200 from the same session, so the failure is specific to the configured domain. Matches the open bug in `docs/PLANNING.md:46`. | This slice's command log (§9) |
 
 ## 6. Relationship to open PR #8 (`webbrain/issue-7`)
 
@@ -214,16 +241,19 @@ upstream anchor or a recorded UNKNOWN + investigation task (starts F7; partially
 Risk: the provenance answer may force re-acquisition of binaries (then P2.1 executes that);
 rollback = revert docs.
 
-**P0.5 Publication decision for 0.7.3** — Owner: Maintainer/Release. Dependencies: P0.1, P0.2;
-D3. Files: none required (tag + `pyproject.toml` version already aligned; `.github/CHANGELOG.md`
-"Unreleased" section must be finalized). Deliverable: either (a) publish `v0.7.3` and record the
-receipt, acknowledging pip users currently get legacy 0.6.2 with `shell=True`, or (b) a recorded
-decision + dated issue explaining the delay. Validation: `python -m build && twine check dist/*`
-locally; CI green on the release commit; `publish.yml` tag gate passes.
-Acceptance: PyPI latest is no longer 0.6.2, or a dated decision record exists (fixes F3's
-indefinite drift). Risk: publishing is effectively irreversible — treat (a) as gated on P0.4's
-provenance row not contradicting the shipped binaries; rollback not available post-publish (yank
-only).
+**P0.5 Publication decision for 0.7.3** — Owner: Maintainer/Release. Dependencies: P0.1, P0.2,
+P0.4; D3. Files: none required (tag + `pyproject.toml` version already aligned;
+`.github/CHANGELOG.md` "Unreleased" section must be finalized). Deliverable: either (a) publish
+`v0.7.3` and record the receipt, acknowledging pip users currently get legacy 0.6.2 with
+`shell=True`, or (b) a recorded decision + dated issue explaining the delay. Validation:
+`python -m build && twine check dist/*` locally; CI green on the release commit; `publish.yml`
+tag gate passes. Acceptance: PyPI latest is no longer 0.6.2, or a dated decision record exists
+(fixes F3's indefinite drift). Risk: publishing is effectively irreversible — rollback not
+available post-publish (yank only). **Publication gate on P0.4:** option (a) requires every P0.4
+provenance row to be upstream-anchored. A row recorded as UNKNOWN does **not** satisfy the gate
+on its own: shipping over an UNKNOWN row requires an explicit maintainer exception recorded in
+the release decision, naming the artifact, the UNKNOWN row, and its open investigation task.
+Without that exception, an unadjudicated UNKNOWN row forces outcome (b).
 
 ### P1 — finish the migration (API completion, PR #8 disposition)
 
@@ -239,12 +269,13 @@ opt-in flag + tests with quoted-path cases. Rollback: revert single commit.
 
 **P1.2 Snapshot-family and `cd` disposition** — Owner: Implementation agent. Dependencies: none.
 Files: `py7zip/py7zip.py:127–129, 208–219`, `tests/test_characterization_wrapper.py:301–347`,
-`docs/planning/COMPATIBILITY.md`. Deliverable: execute the already-recorded decision — remove the
-four stubs and deprecate/remove `cd` (or convert to a context manager), updating the
-characterization tests in the same commit per the contract rules. Acceptance: public surface
-contains only implemented behavior; `python -c "from py7zip.py7zip import Py7zip;
-[hasattr(Py7zip, m) for m in ('full','incremental','differential','snapshot')]"` returns all
-False. Validation: full offline suite in CI. Risk: breaking no-op callers — mitigated by the
+`docs/planning/COMPATIBILITY.md`. Deliverable: execute the recorded decisions under the §2
+exception — remove the four stubs (scheduled by COMPATIBILITY.md, "The snapshot family") and
+deprecate then remove `cd` (migration decision in §2, mirrored in the COMPATIBILITY.md migration
+map), updating the characterization tests in the same commit per the contract rules. Acceptance:
+public surface contains only implemented behavior; `python -c "from py7zip.py7zip import Py7zip;
+print([hasattr(Py7zip, m) for m in ('full','incremental','differential','snapshot')])"` prints
+all False. Validation: full offline suite in CI. Risk: breaking no-op callers — mitigated by the
 COMPATIBILITY note that they never did anything; changelog entry required
 (`.github/CHANGELOG.md`). Rollback: revert.
 
@@ -299,8 +330,10 @@ Files: `py7zip/platforms.py:95–106` (catalog), `bin/` refresh, `py7zip/acquisi
 gap; the heart of issue #7). Consider serving binaries from GitHub release assets instead of
 `raw/main` (the base URL is already injectable, making this a data change). Acceptance: every
 catalog entry cites an upstream release URL + upstream checksum; a documented re-derivation
-procedure reproduces each artifact hash. Validation: `sha256sum bin/**/*` vs catalog + provenance
-rows; `pytest tests/test_platforms.py tests/test_acquisition.py -q`. Risk: current binaries may
+procedure reproduces each artifact hash. Validation: `find bin -type f -size +0c -exec sha256sum
+{} +` (recursive; non-empty files only) vs catalog + provenance rows — the expected digests are
+listed in §4.2; `pytest tests/test_platforms.py tests/test_acquisition.py -q`. Risk: current
+binaries may
 fail upstream anchoring (UNKNOWN until P0.4) — contingency: rebuild/replace artifacts and bump
 catalog hashes in one reviewed commit. Rollback: revert catalog/artifact commit.
 
@@ -375,9 +408,11 @@ and the characterization suite already fences.
 | `gh api repos/aliasfoxkde/py7zip/commits/main` | remote main == `9d428da…` |
 | `gh pr view 8 --json …` / `gh pr diff 8` / `gh pr checks 8` | facts in §6; checks: CodeRabbit pass only, no workflow checks |
 | `gh issue view 7` | issue body demands local-install support and official-checksum verification |
-| `find bin -type f -size +0c -exec sha256sum {} \;` + read of `py7zip/platforms.py` | 7 non-empty artifacts, digests match catalog 7/7; 6 zero-byte placeholders |
+| `find bin -type f -size +0c -exec sha256sum {} +` + read of `py7zip/platforms.py` | 8 non-empty files under `bin/` (7 catalog artifacts + `bin/INFO.md`); digests match catalog 7/7, full listing in §4.2; 6 zero-byte placeholders (re-verified during review resolution) |
 | `curl -s https://pypi.org/pypi/py7zip/json` | latest **0.6.2**; releases 0.3.0–0.6.2; `requires_python >=3` |
 | `curl -sI -m 8 https://py7zip.cyopsys.com` | exit 0 with empty header block (page unusable) |
+| `curl -sS -L --max-time 8 -o /dev/null -w 'HTTP %{http_code}; bytes %{size_download}\n' https://py7zip.cyopsys.com` (GET, review-resolution slice) | `curl: (6) Could not resolve host: py7zip.cyopsys.com`; HTTP 000; 0 bytes; exit 6. Control: `curl -sSI --max-time 8 -o /dev/null -w 'HTTP %{http_code}\n' https://pypi.org` → HTTP 200, so egress/DNS were healthy and the failure is specific to the configured domain |
+| `git ls-files \| rg '(^|/)(SECURITY\|CONTRIBUTING\|CODE_OF_CONDUCT)\.md$'` (review-resolution slice) | no tracked matches (56 tracked files) — F11 evidence |
 | `grep -rc "def test_" tests/*.py` | 88 test functions |
 | codebase-memory MCP `index_repository` (moderate) | indexed: 317 nodes / 1154 edges; discovery via `search_graph`/`get_architecture` |
 | Markdown/link check | repo provides **no** markdown/link checker (no markdownlint/pre-commit config found). Manual audit performed on the files changed in this commit: every relative link resolves to an existing path (see commit diff); no test suites or builds were run, per task scope |
