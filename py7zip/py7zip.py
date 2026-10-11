@@ -196,7 +196,21 @@ class Py7zip:
         options: str | Sequence[str] = "",
         method: str = "decompress",
     ) -> ArchiveResult | None:
-        """Method used to extract an archive."""
+        """Method used to extract an archive.
+
+        ``options`` means different things on the two runtimes:
+
+        * Safe runtime (default): only a sequence of individual arguments
+          (e.g. ``["-y", "-mx=9"]``) is accepted, each forwarded as a single
+          argument to an argv runner.  A non-empty string raises
+          :class:`TypeError` (audit decision D5 / OVH-16: shell text is
+          rejected, never silently tokenized).  The documented default
+          ``""`` forwards no arguments.
+        * Legacy runtime: a string is appended verbatim to the shell
+          command, preserving the historical behaviour; a sequence is
+          forwarded element by element as an argument vector with
+          ``shell=False``, so no element is re-interpreted by a shell.
+        """
         if not self.legacy:
             operation = "compress" if method == "compress" else "decompress"
             safe_options = () if options == "" else options
@@ -204,18 +218,38 @@ class Py7zip:
             if self.debug and result.stdout:
                 print(result.stdout)
             return result
+        command: str | tuple[str, ...]
+        shell = isinstance(options, str)
         if method == "compress":
-            command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
+            if shell:
+                command = f'"7za{self.extension}" a "{dst}" "{src}" {options}'
+            else:
+                command = (
+                    f"7za{self.extension}",
+                    "a",
+                    os.fspath(dst),
+                    os.fspath(src),
+                    *tuple(options),
+                )
             success_msg = f"Backup created from '{src}' to '{dst}'."
             error_msg = f"Failed to extract archive from '{src}' to '{dst}'."
         else:  # "decompress" method as default
-            command = f'"7za{self.extension}" x "{src}" -o"{dst}" {options}'
+            if shell:
+                command = f'"7za{self.extension}" x "{src}" -o"{dst}" {options}'
+            else:
+                command = (
+                    f"7za{self.extension}",
+                    "x",
+                    os.fspath(src),
+                    f"-o{os.fspath(dst)}",
+                    *tuple(options),
+                )
             success_msg = f"Extracted archive from '{src}' to '{dst}'"
             error_msg = f"Failed to create backup from '{src}' to '{dst}'."
 
         try:
             completed = subprocess.run(
-                command, capture_output=True, text=True, shell=True, check=True
+                command, capture_output=True, text=True, shell=shell, check=True
             )
             if self.debug:
                 print(completed.stdout)

@@ -40,10 +40,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install type checker
-        # mypy 2.x dropped the Python 3.9 target; this project still
-        # supports 3.9, so pin the maintained 1.x line (see pyproject.toml).
-        run: python -m pip install --upgrade pip "mypy<2" types-requests
+      - name: Install package and type checker
+        # The mypy constraint and stubs live in the `typecheck` extra in
+        # pyproject.toml, so local and CI gates enforce the same constraint
+        # (mypy<2: each install resolves the newest matching release).
+        run: python -m pip install --upgrade pip -e ".[typecheck]"
       - name: Run mypy (strict) on py7zip
         run: python -m mypy
 
