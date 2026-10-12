@@ -1,9 +1,10 @@
 """Characterisation of archive execution as it exists today.
 
-``Py7zip.wrapper`` interpolates the binary name, source, destination and
-caller-supplied options into a single string and hands it to
-``subprocess.run(..., shell=True)``.  These tests pin that behaviour from both
-directions:
+``Py7zip.wrapper`` on the legacy runtime interpolates the binary name,
+source, destination and caller-supplied options string into a single string
+and hands it to ``subprocess.run(..., shell=True)``.  A sequence of options
+is the exception: it is forwarded as an argument vector with
+``shell=False``.  These tests pin that behaviour from both directions:
 
 * against a recording process seam, to capture the exact shell string and the
   ``subprocess.run`` keyword arguments; and
@@ -275,6 +276,60 @@ def test_legacy_aliases_forward_the_callers_options(make_wrapper, monkeypatch):
         '"7za" x "src.7z" -o"out" -y',
         '"7za" a "dst.7z" "src" -mx=9',
     ]
+
+
+def test_sequence_options_are_forwarded_as_an_argument_vector(
+    make_wrapper, monkeypatch
+):
+    """A sequence is forwarded element by element, not as its Python repr."""
+    runner = FakeSubprocess().install(monkeypatch)
+
+    wrapper = make_wrapper()
+    wrapper.wrapper("src.7z", "out", options=["-y", "-mx=9"], method="decompress")
+    wrapper.wrapper("src", "dst.7z", options=["-y", "-mx=9"], method="compress")
+
+    assert runner.commands == [
+        ("7za", "x", "src.7z", "-oout", "-y", "-mx=9"),
+        ("7za", "a", "dst.7z", "src", "-y", "-mx=9"),
+    ]
+    assert all(
+        kwargs == {"shell": False, "check": True, "capture_output": True, "text": True}
+        for kwargs in runner.kwargs
+    )
+
+
+@POSIX
+def test_sequence_options_reach_the_binary_one_argument_each(
+    make_wrapper, argv_seen, tmp_path, monkeypatch
+):
+    """Without a shell, a sequence element is never re-interpreted by anything."""
+    side_effect = tmp_path / "arbitrary-command-ran"
+    monkeypatch.setenv("PY7ZIP_SIDE_EFFECT", str(side_effect))
+
+    wrapper = make_wrapper()
+    wrapper.wrapper(
+        "src.7z",
+        "out",
+        options=["-y", 'm0=on; : > "$PY7ZIP_SIDE_EFFECT"'],
+        method="decompress",
+    )
+
+    assert argv_seen() == [
+        "x",
+        "src.7z",
+        "-oout",
+        "-y",
+        'm0=on; : > "$PY7ZIP_SIDE_EFFECT"',
+    ]
+    assert not side_effect.exists(), "a sequence element started a shell command"
+
+
+@POSIX
+def test_sequence_options_with_spaces_stay_one_argument(make_wrapper, argv_seen):
+    wrapper = make_wrapper()
+    wrapper.wrapper("my data", "backup.7z", options=["-mx=9"], method="compress")
+
+    assert argv_seen() == ["a", "backup.7z", "my data", "-mx=9"]
 
 
 def test_only_wrapper_honours_options(make_wrapper, monkeypatch):

@@ -31,6 +31,23 @@ jobs:
       - name: Run offline test suite
         run: python -m pytest tests -p no:cacheprovider
 
+  typecheck:
+    name: Strict type check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package and type checker
+        # The mypy constraint and stubs live in the `typecheck` extra in
+        # pyproject.toml, so local and CI gates enforce the same constraint
+        # (mypy<2: each install resolves the newest matching release).
+        run: python -m pip install --upgrade pip -e ".[typecheck]"
+      - name: Run mypy (strict) on py7zip
+        run: python -m mypy
+
   package:
     name: Build and inspect wheel
     runs-on: ubuntu-latest
