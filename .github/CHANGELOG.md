@@ -21,6 +21,12 @@
   raises `TypeError` for any non-empty options string; the legacy
   runtime forwards a sequence as a `shell=False` argument vector while
   keeping the historical `shell=True` string interpolation.
+- Fixed the safe runtime's `wrapper()`/`decompress()`/`extract()`
+  dispatch to route decompression through `SafePy7zip.decompress()`,
+  whose archive-member validation raises `ArchiveTraversalError`
+  before extraction begins; the dispatch previously called
+  `SafePy7zip.run()` directly and bypassed that guard. Compression
+  behaviour and the options contract are unchanged.
 
 ## 0.7.3
 

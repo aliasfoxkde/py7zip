@@ -57,8 +57,7 @@ class ArchiveRunner:
         """Run an archive operation without invoking a shell."""
         if operation not in {"compress", "decompress"}:
             raise ValueError("operation must be 'compress' or 'decompress'")
-        if isinstance(options, (str, bytes)):
-            raise TypeError("options must be a sequence of individual arguments")
+        validate_options(options)
 
         source_text = os.fspath(source)
         destination_text = os.fspath(destination)
@@ -119,6 +118,12 @@ class ArchiveRunner:
             stdout=completed.stdout,
             stderr=completed.stderr,
         )
+
+
+def validate_options(options: Sequence[str]) -> None:
+    """Reject opaque option strings before any 7-Zip process is started."""
+    if isinstance(options, (str, bytes)):
+        raise TypeError("options must be a sequence of individual arguments")
 
 
 def validate_archive_members(
@@ -184,6 +189,7 @@ class SafePy7zip:
         options: Sequence[str] = (),
     ) -> ArchiveResult:
         """Execute an operation after explicit binary resolution."""
+        validate_options(options)
         return ArchiveRunner(self.ensure_binary(), timeout=self.timeout).run(
             operation, source, destination, options
         )
@@ -202,6 +208,7 @@ class SafePy7zip:
         destination: str | os.PathLike[str],
         options: Sequence[str] = (),
     ) -> ArchiveResult:
+        validate_options(options)
         runner = ArchiveRunner(self.ensure_binary(), timeout=self.timeout)
         validate_archive_members(runner.list_entries(source), destination)
         return runner.run("decompress", source, destination, options)

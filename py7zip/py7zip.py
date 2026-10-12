@@ -205,16 +205,22 @@ class Py7zip:
           argument to an argv runner.  A non-empty string raises
           :class:`TypeError` (audit decision D5 / OVH-16: shell text is
           rejected, never silently tokenized).  The documented default
-          ``""`` forwards no arguments.
+          ``""`` forwards no arguments.  Decompression is routed through
+          :meth:`SafePy7zip.decompress`, which lists the archive and
+          validates every member path against the destination before
+          extracting; an escaping member raises
+          :class:`ArchiveTraversalError` before extraction begins.
         * Legacy runtime: a string is appended verbatim to the shell
           command, preserving the historical behaviour; a sequence is
           forwarded element by element as an argument vector with
           ``shell=False``, so no element is re-interpreted by a shell.
         """
         if not self.legacy:
-            operation = "compress" if method == "compress" else "decompress"
             safe_options = () if options == "" else options
-            result = self._safe.run(operation, src, dst, safe_options)
+            if method == "compress":
+                result = self._safe.compress(src, dst, safe_options)
+            else:
+                result = self._safe.decompress(src, dst, safe_options)
             if self.debug and result.stdout:
                 print(result.stdout)
             return result
