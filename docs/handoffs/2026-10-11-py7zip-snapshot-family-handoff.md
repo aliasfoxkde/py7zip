@@ -364,16 +364,48 @@ by this document.)
      `grep -nF "point-in-time" docs/FEATURES.md` and
      `grep -nF "Simplifies lessor known features" docs/FEATURES.md` both
      return empty.
-  3. **No assertion that the family works remains** — checked per
-     occurrence, not per line (a qualifier in one clause must not excuse
-     an unqualified claim in another clause of the same line):
-     `grep -noiE "(full|incremental|differential|snapshot)s?\b[^;.]{0,60}"
-     docs/FEATURES.md | grep -viE "not[- ]implemented|planned|no-op"`
-     returns empty — every family-word occurrence carries an explicit
-     not-implemented/planned/no-op qualifier within its own clause
-     (qualifier after the word, before the next `;` or `.`). This rejects
-     e.g. "Full backups are supported; snapshots are planned", which a
-     whole-line filter would pass.
+  3. **No assertion that the family works remains** — evaluate each family
+     word independently, stopping at the next family word or clause
+     delimiter, whichever comes first. This prevents a qualifier attached to
+     a later occurrence from masking an earlier unqualified claim. Run:
+
+     ```bash
+     python3 - <<'PY'
+     import re
+     from pathlib import Path
+
+     family = re.compile(r"\b(?:full|incremental|differential|snapshot)s?\b", re.I)
+     qualifier = re.compile(r"\b(?:not[- ]implemented|planned|no-op)\b", re.I)
+     delimiter = re.compile("[;.]")
+
+     def unqualified(text: str) -> list[str]:
+         occurrences = list(family.finditer(text))
+         failures = []
+         for index, occurrence in enumerate(occurrences):
+             end = len(text)
+             if index + 1 < len(occurrences):
+                 end = min(end, occurrences[index + 1].start())
+             punctuation = delimiter.search(text, occurrence.end(), end)
+             if punctuation:
+                 end = min(end, punctuation.start())
+             if not qualifier.search(text, occurrence.end(), end):
+                 failures.append(occurrence.group(0))
+         return failures
+
+     negative = "Full backups are supported, snapshots are planned"
+     positive = "Full backups are not implemented; snapshots are planned"
+     assert unqualified(negative), "mixed-clause counterexample must fail"
+     assert not unqualified(positive), "qualified occurrences must pass"
+
+     findings = unqualified(Path("docs/FEATURES.md").read_text())
+     if findings:
+         raise SystemExit(f"unqualified family claims: {findings}")
+     PY
+     ```
+
+     The mixed-clause counterexample must fail, the qualified two-occurrence
+     example must pass, and the final check must return zero findings after
+     the Phase A documentation correction.
 - Rollback: revert the single docs commit. Risk: none at runtime.
 
 ### Phase B — record the decisions (gates; Maint)
