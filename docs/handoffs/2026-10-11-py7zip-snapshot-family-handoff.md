@@ -6,15 +6,26 @@ behavior, what the repository actually records about their intent, the
 defect/legacy classification, compatibility and security implications, the
 open decision gates, and the phased path to a resolved contract.
 
-**Evidence boundary:** branch `codex/py7zip-mypy-hardening-20261011`, HEAD
-`7f4f381` (= `origin/main` `f6e9a1a` + one mypy-hardening commit; local
-`main` is stale at `a7b396c`), working tree clean at audit start. The
-divergent audit line was read from local tags `v0.8.0` (`3252d39`,
-2026-09-29) and `v0.9.0` (`5a60a7c2`, 2026-10-03); its branch tip is
-`7822d95`. Topology: `origin/main...audit/py7zip-qualification-20260909` is
-**6 behind / 22 ahead** at merge-base `4713a75` (each side has commits the
-other lacks), and `v0.9.0` is **not** an ancestor of HEAD. All citations are
-to files in this worktree unless prefixed with a ref (e.g. `v0.9.0:`).
+**Evidence boundary and required execution base.** The original audit
+observations (W1–W13, §11) were taken on branch
+`codex/py7zip-mypy-hardening-20261011`, HEAD `7f4f381` (= `origin/main`
+`f6e9a1a` + one mypy-hardening commit; local `main` is stale at `a7b396c`),
+working tree clean at audit start. The **required execution base for every
+phase below is this branch, `docs/py7zip-snapshot-family-handoff-20261012`,
+at HEAD `b134d91` or a descendant**: `b134d91` sits directly on
+`origin/main` `f6e9a1a` (`f6e9a1a..b134d91` contains only this handoff
+document — docs-only), so its code content equals `f6e9a1a`; the `7f4f381`
+mypy-hardening commit is **not** part of this base and must not be rebased
+onto it. Because that commit shifts `py7zip/py7zip.py` line numbers, all
+`py7zip/py7zip.py` anchors in this revision are stated for the execution
+base (family methods `224–235`, `snapshot` docstring `234`, `wrapper`
+diagnostics `178–202`), not the `7f4f381` numbering. The divergent audit
+line was read from local tags `v0.8.0` (`3252d39`, 2026-09-29) and `v0.9.0`
+(`5a60a7c2`, 2026-10-03); its branch tip is `7822d95`. Topology:
+`origin/main...audit/py7zip-qualification-20260909` is **6 behind / 22
+ahead** at merge-base `4713a75` (each side has commits the other lacks), and
+`v0.9.0` is **not** an ancestor of HEAD. All citations are to files in this
+worktree at the execution base unless prefixed with a ref (e.g. `v0.9.0:`).
 
 **Status:** docs-only handoff. **No source file was changed and no test was
 weakened, deleted, or edited.** Nothing in this document authorizes a code
@@ -66,10 +77,10 @@ defect, not the deliberateness:
 
 The failure mode is the harmful part: **silent success**. `wrapper` on a real
 failure at least prints diagnostics under `verbose`/`debug`
-(`py7zip/py7zip.py:222–228`); the snapshot family prints nothing, raises
+(`py7zip/py7zip.py:178–202`); the snapshot family prints nothing, raises
 nothing, spawns nothing, and returns `None`. For a method whose docstring
 says "Streamlines the process for creating a snapshot"
-(`py7zip/py7zip.py:306`) and whose sibling docs promise backup schemas, a
+(`py7zip/py7zip.py:234`) and whose sibling docs promise backup schemas, a
 caller who believes the call ran has no archive and no error. On a backup
 API, a false success is a data-protection hazard, not a cosmetic gap.
 
@@ -82,11 +93,11 @@ whether … implement them or remove them from the public surface" is recorded
 as *open work* in `docs/planning/HANDOFF.md:39–40`, and the deciding records
 still do not exist (§6).
 
-## 2. Current behavior (verified at HEAD `7f4f381`)
+## 2. Current behavior (verified at execution base `b134d91`, code identical to `f6e9a1a`)
 
-- `py7zip/py7zip.py:276–307` — all four methods share the signature
+- `py7zip/py7zip.py:224–235` — all four methods share the signature
   `(self, src, dst, options="")` and their bodies are a bare `return`.
-  Only `snapshot` carries a docstring (`:306`); the other three have none.
+  Only `snapshot` carries a docstring (`:234`); the other three have none.
 - The no-op is **unconditional across both runtimes**: the methods never
   consult `self.legacy`, `self._safe`, or any attribute. Identical behavior
   on the safe (default) and legacy runtimes.
@@ -245,12 +256,22 @@ equips the maintainer to.
    removing exactly the four stubs plus `cd` — no other public surface
    (`PLATFORM_ARCHITECTURE_PY7ZIP_2026-10-10.md:37–43`); `AGENTS.md`
    otherwise requires preserving the public `Py7zip` API (`AGENTS.md:5–8`).
-6. **Documentation is the only immediately user-facing surface.** Until the
-   gates resolve, `docs/FEATURES.md:5–6` keeps advertising non-existent
-   functionality to every reader of the repo and the PyPI long-description
-   source. Fixing the advertising does not prejudge implement-vs-remove and
-   is already scoped as OVH-03 ("Docs truth-pass … `docs/FEATURES` stub
-   labeling", `2026-10-11-py7zip-overhaul.md:372, 464–466`).
+6. **Documentation is the only immediately user-facing surface — and PyPI
+   visitors are one click away from it.** Until the gates resolve,
+   `docs/FEATURES.md:5–6` keeps advertising non-existent functionality to
+   every reader of the repo. The PyPI exposure is by link, not by syndicated
+   content: `README.md:36` links `docs/FEATURES.md`, and `README.md` is the
+   PyPI long description (`pyproject.toml:9`,
+   `readme = {file = "README.md", …}`); the linked file is not rendered as
+   long-description content, so the false claims do not appear on the
+   package's PyPI page itself — a prospective `pip install py7zip` visitor
+   can click the documentation link and land on them. Correcting
+   `docs/FEATURES.md` therefore fixes the link target; the rendered text of
+   the already-published 0.6.2 PyPI page changes only with a future release
+   (no release is authorized by this handoff). Fixing the advertising does
+   not prejudge implement-vs-remove and is already scoped as OVH-03
+   ("Docs truth-pass … `docs/FEATURES` stub labeling",
+   `2026-10-11-py7zip-overhaul.md:372, 464–466`).
 
 ## 5. Security implications
 
@@ -317,7 +338,10 @@ third rule (their interaction) is not written anywhere and is recorded here.
 Execution order is Phase A → B → (C | C′) → D. Phase A needs no gate and
 changes no code. Phases C/C′ are already-specified plan tasks; they are
 listed here bound to their gates, not re-specified. **This handoff executes
-none of them** — it is docs-only and uncommitted by instruction.
+none of them** — it is docs-only. ("Uncommitted by instruction" described
+authoring time only; the handoff has since been committed on this branch —
+see §11. That changes the filing, not the force: nothing below is executed
+by this document.)
 
 ### Phase A — stop the false advertising (docs-only; no gate; maps to OVH-03)
 
@@ -330,9 +354,18 @@ none of them** — it is docs-only and uncommitted by instruction.
   matches reality (it does at HEAD) and leave `docs/USAGE.md` untouched —
   it never documents the family (`docs/USAGE.md:1–16` covers only
   compress/decompress).
-- Acceptance: the edited doc lines are the only changed files
-  (`git diff --stat` = docs only); `grep -n "full\|incremental\|differential\|snapshot" docs/FEATURES.md`
-  returns no unqualified feature claim.
+- Acceptance (falsifiable):
+  1. `git diff --stat` names docs files only (expected: just
+     `docs/FEATURES.md`; A2 requires no edit at HEAD).
+  2. The two claims at `docs/FEATURES.md:5–6` no longer appear:
+     `grep -nF "point-in-time" docs/FEATURES.md` and
+     `grep -nF "Simplifies lessor known features" docs/FEATURES.md` both
+     return empty.
+  3. **No assertion that the family works remains:**
+     `grep -nEi "full|incremental|differential|snapshot" docs/FEATURES.md
+     | grep -viE "not implemented|planned|no-op"` returns empty — every
+     line still naming the family carries an explicit not-implemented
+     qualifier.
 - Rollback: revert the single docs commit. Risk: none at runtime.
 
 ### Phase B — record the decisions (gates; Maint)
@@ -347,8 +380,11 @@ none of them** — it is docs-only and uncommitted by instruction.
   family (§3.3) and therefore collide with OVH-14 as written.
 - **B3.** Write the DG-3 interaction rule (§6) into whichever record lands
   second, and add a one-line cross-reference to the first.
-- Acceptance: decision records exist under `docs/planning/`; OVH-14's
-  blocking condition is discharged only by B1.
+- Acceptance (falsifiable): `grep -rln "D-OVH-7" docs/planning/` returns
+  the DG-1 record, which names a removal version and window;
+  `grep -rln "D-OVH-1" docs/planning/` returns the DG-2 record, which names
+  exactly one of merge / cherry-pick / leave-diverged; OVH-14's blocking
+  condition is discharged only by B1.
 
 ### Phase C — removal path (only if DG-2 outcome (c), or DG-2 deferred and DG-1 taken)
 
@@ -372,15 +408,30 @@ Not specified by any prior task; requires a new recorded task before code
   (including `diff_path`/`timestamp` kwargs) from `v0.9.0`.
 - **C′3.** Update the signature pin
   (`tests/test_characterization_wrapper.py:311–321`) and the no-op pins
-  (`:300–308`) to the adopted contract **in the same commit** (rule 3),
-  and port `TestBackupModes` + the differential re-run pin from the audit
-  line (`1bb3ea3`, `13fe83e`).
+  (`:300–308`) to the adopted contract **in the same commit** (rule 3).
+  **Test design — one choice, fixing an ambiguity in earlier revisions:**
+  the audit line's `TestBackupModes` is **not** ported as a host-gated
+  real-binary e2e lane. That suite (v0.9.0
+  `tests/test_e2e_bundled.py::TestBackupModes`, introduced by `1bb3ea3`)
+  runs the real `7za` checked into `bin/` and is gated on the bundled
+  artifact for the detected platform — a design this line's offline suite
+  (socket denial via `tests/conftest.py:43–52`; `filterwarnings =
+  ["error"]`) does not carry. Port its behavioral assertions as **argv pins
+  against the fake seam** (`tests/fakes.py`, `FakeSubprocess`), per §8
+  (adoption cases 2–7), including the differential re-run pin from
+  `13fe83e` as a two-call fake-seam pin. Do not check a real binary into
+  `bin/` and do not add a host-gated lane in this phase; that would be a
+  separate, unrecorded task.
 - **C′4.** Rewrite `docs/FEATURES.md`, `docs/planning/COMPATIBILITY.md`
   family rows to the implemented contract; revise OVH-14 to `cd`-only
   (DG-3).
-- Acceptance: full offline suite green with the updated pins; e2e backup
-  tests green offline via the fake seam; no support claim without a receipt
-  (`AGENTS.md:24–26`).
+- Acceptance: full offline suite green with the updated pins; the ported
+  backup-mode coverage (§8, adoption cases 2–7) runs entirely through the
+  fake seam offline — falsifiably: no `tests/test_e2e_bundled.py` is added,
+  `git status --short -- bin/` shows no new binary (only new additions are
+  barred; existing tracked `7za` artifacts stay as-is), and every new
+  backup-mode test goes through `FakeSubprocess`; no support claim without
+  a receipt (`AGENTS.md:24–26`).
 
 ### Phase D — release and verification
 
@@ -413,7 +464,10 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
   `all(not hasattr(Py7zip, m) for m in ("full","incremental","differential","snapshot"))`,
   mirroring OVH-14's acceptance one-liner
   (`2026-10-11-py7zip-overhaul.md:653–655`).
-- **Adoption (Phase C′):**
+- **Adoption (Phase C′)** — design fixed to one choice: **fake-seam argv
+  pins** (`FakeSubprocess`); the v0.9.0 `TestBackupModes` host-gated
+  real-binary e2e (checked-in `bin/` artifact) is not ported as such
+  (§7, C′3):
   1. signature pin updated to the adopted parameters (kwarg-only
      `diff_path`/`timestamp`);
   2. `full` argv = `[binary, "a", dst, src, "-y", *options]`;
@@ -434,9 +488,11 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
 
 ## 9. Success criteria
 
-- **Phase A:** `docs/FEATURES.md` no longer advertises the family as
-  working; diff touches docs only; characterization suite untouched and
-  green.
+- **Phase A:** the falsifiable Phase A checks hold — no line of
+  `docs/FEATURES.md` names the family without a not-implemented/planned
+  qualifier (the §7 Phase A grep guard returns empty), the two `:5–6`
+  claims are gone, the diff touches docs only; characterization suite
+  untouched and green.
 - **Phase B:** DG-1 and DG-2 records exist under `docs/planning/`; the DG-3
   interaction rule is present in at least one of them; OVH-14's blocking
   condition references the actual record.
@@ -445,8 +501,11 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
   exist and assert the warning (commit 1) and the absence (commit 2); no
   pin was deleted or weakened outside the same-commit rule.
 - **Phase C′:** full offline suite green with the adopted contract pinned;
-  `TestBackupModes`-equivalent e2e coverage exists offline; COMPATIBILITY
-  and FEATURES describe the implemented behavior; OVH-14 revised to
+  backup-mode coverage exists as offline fake-seam argv pins per §8
+  (adoption cases 2–7) — falsifiably, no new host-gated real-binary e2e
+  lane is added and no new checked-in `bin/` binary is added; existing
+  tracked `7za` artifacts remain unchanged. COMPATIBILITY and FEATURES
+  describe the implemented behavior; OVH-14 revised to
   `cd`-only.
 - **Phase D:** the shipped release's notes contain the family callout
   (migration or deltas), and every support claim about backup modes has a
@@ -486,9 +545,16 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
 | W11 | `git log --all --oneline -- "*QUALIFICATION*"` | plan file's commits (`3252d39`, `2e8c3df`, `5a60a7c`, `d6a6c5d`) are on the audit line only |
 | W12 | Grep sweeps over `docs/` (`FEATURES`, `CHANGELOG`, `PLANNING`, `planning/HANDOFF`, `planning/COMPATIBILITY`, both handoffs) | every claim in §1–§3 cited with file:line |
 | W13 | PyPI JSON API, `GET https://pypi.org/pypi/py7zip/json` (observed 2026-10-11) | latest version `0.6.2`; release keys end at `0.6.2` (§1, item 2) |
+| W14 | `git rev-parse HEAD`; `git diff --stat f6e9a1a..HEAD`; re-read `py7zip/py7zip.py` at HEAD (observed 2026-10-12) | HEAD `b134d91` = `f6e9a1a` + docs-only handoff commits (`7f4f381` not in this history); code identical to `f6e9a1a`; anchors restated for this base: family `224–235` (docstring `234`), wrapper diagnostics `178–202`; README.md:36 links FEATURES.md; pyproject.toml:9 = readme field; v0.9.0 e2e confirmed host-gated real-binary |
 
-No tests were executed and no source file was modified (docs-only task;
-tree left uncommitted by instruction).
+No tests were executed and no source file was modified (docs-only task).
+"Tree left uncommitted by instruction" (here and in §7) is a historical
+statement about authoring time, not the current state: the handoff has
+since been committed on `docs/py7zip-snapshot-family-handoff-20261012`
+(`0899976` adds this document; `b134d91` corrects its date). The present
+revision restates the `py7zip/py7zip.py` anchors for that committed
+execution base (W14) and tightens Phase A/C′ acceptance wording; it changes
+no classification, gate, or scope decision.
 
 ## 12. Appendix — the implemented contract as it exists at `v0.9.0` (`5a60a7c2`)
 
@@ -504,7 +570,7 @@ Reference for whoever executes Phase C′; verified by W6/W8, quoted from
 
 Supporting shape: `Py7zip._normalize_options` maps `""`/`None` → `()` and
 passes non-empty strings through so the argv runtime raises the same
-`TypeError` as the aliases (`v0.9.0:py7zip/py7zip.py:225–233`);
+`TypeError` as the aliases (`v0.9.0:py7zip/py7zip.py:224–234`);
 `Py7zip._backup_executor` returns `self._safe` on the default runtime and,
 on legacy, resolves `7za` from PATH via `shutil.which` (typed
 `ArchiveExecutionError` if absent) so both runtimes execute identically
