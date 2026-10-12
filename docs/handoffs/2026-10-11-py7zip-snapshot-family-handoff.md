@@ -346,10 +346,13 @@ by this document.)
 ### Phase A — stop the false advertising (docs-only; no gate; maps to OVH-03)
 
 - **A1.** Edit `docs/FEATURES.md:5–6`: either delete the two claims or mark
-  them explicitly as not implemented in any released build, e.g. "planned;
-  not implemented in 0.6.x (no-op) — see COMPATIBILITY.md". Do not claim a
-  removal version (DG-1 unrecorded) and do not claim the audit-line
-  behavior as current (DG-2 unrecorded).
+  them explicitly as no-ops in PyPI 0.6.2 and on the current main line
+  (§1 item 2, §2), e.g. "planned; no-op in PyPI 0.6.2 and current
+  mainline — see COMPATIBILITY.md". Do not describe the implemented
+  v0.8.0/v0.9.0 GitHub release artifacts (§3.3) as no-ops or as
+  unimplemented — the no-op claim holds only for PyPI 0.6.2 and this
+  line. Do not claim a removal version (DG-1 unrecorded) and do not
+  claim the audit-line behavior as current (DG-2 unrecorded).
 - **A2.** Same commit: confirm `docs/PLANNING.md:13–14` annotation still
   matches reality (it does at HEAD) and leave `docs/USAGE.md` untouched —
   it never documents the family (`docs/USAGE.md:1–16` covers only
@@ -361,11 +364,16 @@ by this document.)
      `grep -nF "point-in-time" docs/FEATURES.md` and
      `grep -nF "Simplifies lessor known features" docs/FEATURES.md` both
      return empty.
-  3. **No assertion that the family works remains:**
-     `grep -nEi "full|incremental|differential|snapshot" docs/FEATURES.md
-     | grep -viE "not implemented|planned|no-op"` returns empty — every
-     line still naming the family carries an explicit not-implemented
-     qualifier.
+  3. **No assertion that the family works remains** — checked per
+     occurrence, not per line (a qualifier in one clause must not excuse
+     an unqualified claim in another clause of the same line):
+     `grep -noiE "(full|incremental|differential|snapshot)s?\b[^;.]{0,60}"
+     docs/FEATURES.md | grep -viE "not[- ]implemented|planned|no-op"`
+     returns empty — every family-word occurrence carries an explicit
+     not-implemented/planned/no-op qualifier within its own clause
+     (qualifier after the word, before the next `;` or `.`). This rejects
+     e.g. "Full backups are supported; snapshots are planned", which a
+     whole-line filter would pass.
 - Rollback: revert the single docs commit. Risk: none at runtime.
 
 ### Phase B — record the decisions (gates; Maint)
@@ -386,7 +394,7 @@ by this document.)
   exactly one of merge / cherry-pick / leave-diverged; OVH-14's blocking
   condition is discharged only by B1.
 
-### Phase C — removal path (only if DG-2 outcome (c), or DG-2 deferred and DG-1 taken)
+### Phase C — removal path (only if DG-2 outcome (c) and DG-1 taken)
 
 Execute **OVH-14 exactly as specified** — the two-commit deprecate-then-
 remove sequence already specified in §3.2
@@ -488,11 +496,12 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
 
 ## 9. Success criteria
 
-- **Phase A:** the falsifiable Phase A checks hold — no line of
-  `docs/FEATURES.md` names the family without a not-implemented/planned
-  qualifier (the §7 Phase A grep guard returns empty), the two `:5–6`
-  claims are gone, the diff touches docs only; characterization suite
-  untouched and green.
+- **Phase A:** the falsifiable Phase A checks hold — every family-word
+  occurrence in `docs/FEATURES.md` carries a not-implemented/planned/no-op
+  qualifier in its own clause (the §7 Phase A per-occurrence grep guard
+  returns empty; a qualifier in one clause does not excuse another claim
+  on the same line), the two `:5–6` claims are gone, the diff touches
+  docs only; characterization suite untouched and green.
 - **Phase B:** DG-1 and DG-2 records exist under `docs/planning/`; the DG-3
   interaction rule is present in at least one of them; OVH-14's blocking
   condition references the actual record.
@@ -546,15 +555,23 @@ Phase-specific cases to add (offline; fake seam per `tests/conftest.py`,
 | W12 | Grep sweeps over `docs/` (`FEATURES`, `CHANGELOG`, `PLANNING`, `planning/HANDOFF`, `planning/COMPATIBILITY`, both handoffs) | every claim in §1–§3 cited with file:line |
 | W13 | PyPI JSON API, `GET https://pypi.org/pypi/py7zip/json` (observed 2026-10-11) | latest version `0.6.2`; release keys end at `0.6.2` (§1, item 2) |
 | W14 | `git rev-parse HEAD`; `git diff --stat f6e9a1a..HEAD`; re-read `py7zip/py7zip.py` at HEAD (observed 2026-10-12) | HEAD `b134d91` = `f6e9a1a` + docs-only handoff commits (`7f4f381` not in this history); code identical to `f6e9a1a`; anchors restated for this base: family `224–235` (docstring `234`), wrapper diagnostics `178–202`; README.md:36 links FEATURES.md; pyproject.toml:9 = readme field; v0.9.0 e2e confirmed host-gated real-binary |
+| W15 | PR #27 review-verification (2026-10-12): `GET api.github.com/repos/aliasfoxkde/py7zip/releases` → exactly `v0.8.0`/`v0.9.0`, both `draft: false`; `GET pypi.org/pypi/py7zip/json` → latest `0.6.2`; `git rev-parse v0.8.0^{commit} v0.9.0^{commit}` → `3252d397`/`5a60a7c2`; `git show v0.9.0:py7zip/py7zip.py` → family implemented with `diff_path`/`timestamp`; new §7 Phase A grep guard run against the pre-edit `docs/FEATURES.md` claims, the mixed-clause counterexample, and the A1 permitted wording; `git diff --check` | all three review findings confirmed and corrected (§7 A1, §7 Phase A acceptance 3, §9 Phase A, §7 Phase C heading); guard flags the pre-edit claims and the counterexample, passes the permitted wording; diff clean |
 
 No tests were executed and no source file was modified (docs-only task).
 "Tree left uncommitted by instruction" (here and in §7) is a historical
 statement about authoring time, not the current state: the handoff has
 since been committed on `docs/py7zip-snapshot-family-handoff-20261012`
-(`0899976` adds this document; `b134d91` corrects its date). The present
-revision restates the `py7zip/py7zip.py` anchors for that committed
-execution base (W14) and tightens Phase A/C′ acceptance wording; it changes
-no classification, gate, or scope decision.
+(`0899976` adds this document; `b134d91` corrects its date). An earlier
+revision restated the `py7zip/py7zip.py` anchors for that committed
+execution base (W14) and tightened Phase A/C′ acceptance wording. The
+present revision (2026-10-12, from PR review) applies three corrections
+(W15): the Phase A no-op claim is limited to PyPI 0.6.2 and the current
+main line, with the implemented v0.8.0/v0.9.0 GitHub release artifacts
+distinguished (§7 A1); the Phase A grep guard is per-occurrence instead
+of whole-line, so one qualified clause no longer excuses an unqualified
+claim elsewhere on the line (§7 acceptance 3, §9); and Phase C now
+requires DG-2 outcome (c) **and** DG-1 taken — the deferred-DG-2
+alternative contradicted §6/DG-3 and is removed (§7).
 
 ## 12. Appendix — the implemented contract as it exists at `v0.9.0` (`5a60a7c2`)
 
