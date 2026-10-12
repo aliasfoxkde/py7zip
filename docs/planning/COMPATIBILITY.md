@@ -41,9 +41,10 @@ safe-by-default runtime landed (`4713a75`), the aliases changed to forward
 by forwarding pins on both runtimes:
 `tests/test_characterization_wrapper.py::test_legacy_aliases_forward_the_callers_options`
 and, for the safe runtime,
-`tests/test_default_api.py::test_default_runtime_accepts_individual_option_arguments`
-and
 `tests/test_default_api.py::test_default_aliases_require_individual_option_arguments`.
+This PR adds
+`tests/test_default_api.py::test_default_runtime_accepts_individual_option_arguments`
+as a separate pin for the safe runtime's individual-argument contract.
 
 ### Return values and errors
 
