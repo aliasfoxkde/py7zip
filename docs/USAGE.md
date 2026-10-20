@@ -1,19 +1,36 @@
 # USAGE
 
 ## Example Python script:
-	import py7zip
+	from py7zip.py7zip import Py7zip
 
-	# Sets up binary for the system if it does not already exist and assigns the 7zip class to 'z'
-	z = py7zip.Py7zip()
-	src = "path/to/zipfile"
-	dst = "path/to/output/directory"  # Usually contains a .zip extension
-	options = "" # Optional
+	# Constructing the wrapper detects the host platform. It downloads
+	# nothing and starts no process until you request an archive operation.
+	z = Py7zip()
 
-	# Compress source file or directory to destination
-	z.compress(src, dst, options)
+	src = "path/to/source"                # file or directory to archive
+	archive = "path/to/output/archive.7z"
+	outdir = "path/to/output/directory"
 
-	# Decompress source archive back to destination directory
-	z.decompress(dst, src, options)
+	# Optional and explicit: acquire the checksum-verified binary for this
+	# platform into the cache now. If skipped, the first archive operation
+	# acquires it on demand.
+	z.download_binary()
+
+	# Compress source file or directory into the destination archive.
+	# Returns an ArchiveResult; check .success / .returncode.
+	result = z.compress(src, archive)
+
+	# Decompress an archive back into the destination directory.
+	result = z.decompress(archive, outdir)
+
+	# Options are individual arguments, not a shell string; passing a
+	# plain string raises TypeError on the default runtime.
+	result = z.compress(src, archive, ("-mx9",))
+
+The default runtime is the safe runtime: it executes 7-Zip with an
+argument list (never a shell), verifies the downloaded binary's sha256
+digest against pinned values, and rejects archive members that would
+escape the extraction directory.
 	
 
 ## 7zip Usage (Command Line Arguments; aka "Options")

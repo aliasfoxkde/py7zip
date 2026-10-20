@@ -2,12 +2,19 @@
 Reference documentation that details the features of this module as well as 7zip.
 
 ## Py7zip
-- Simplified "point-in-time" backups and full/incremental schemas using snapshots
-- Simplifies lessor known features of 7zip. Such as full, differential, incremental backups, etc.
-- Comprehensive documentation through online wiki pages (using standard markdown).
-- Cross platform support for Windows, Linux, and Mac.
-- Native "Pythonic" logic removes need for additional libraries or CLI executing.
-- Uses '7za' compiled library for compatability, Performance, and Reliability.
+- Backup helper methods are planned but not implemented: `full` is a no-op,
+  `incremental` is a no-op, `differential` is a no-op, and `snapshot` is a
+  no-op in PyPI 0.6.2 and on the current main line (see
+  `docs/planning/COMPATIBILITY.md`).
+- Documentation under `docs/` (a GitHub wiki is planned).
+- Binaries are cataloged for Linux, Windows, and macOS hosts; other hosts
+  are refused with a typed error. Qualified platform-support claims require
+  receipts per `AGENTS.md`; see the platform checklist in `README.md` and
+  `bin/PROVENANCE.md`.
+- Wraps a 7-Zip command-line binary from Python: the default runtime builds
+  an argument vector and runs it without a shell.
+- Uses 7-Zip console binaries (`7za`) rather than reimplementing archive
+  formats in Python.
 - Lightweight, being under a few megabytes in size (varies by platform).
 
 ## 7-zip Features (Source: https://www.7-zip.org):
@@ -25,4 +32,4 @@ Reference documentation that details the features of this module as well as 7zip
 - Strong AES-256 encryption in 7z and ZIP formats
 - Self-extracting capability for 7z format
 - Powerful command line version
-- Localizations for 87 languages  (not currently implimented)
+- Localizations for 87 languages  (not currently implemented)
