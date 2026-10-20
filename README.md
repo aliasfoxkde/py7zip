@@ -52,15 +52,26 @@ the terminal/command line as you normally would. This also lends to making cross
 - [ ] Linux arm64 (64-bit)
 - [ ] Linux arm (32-bit)
 - [ ] macOS (arm64 / x86-64)
-- [x] Windows x64 (64-bit)
+- [ ] Windows x64 (64-bit)
 - [ ] Windows x86 (32-bit )
 - [ ] Windows arm64 (64-bit)
 
+No platform row is currently receipt-backed. Per the promotion rule in
+`AGENTS.md`, a row may be checked only with a qualification receipt
+(exact Python version, OS/architecture, binary provenance, commands, and
+test result). The Windows x64 row was unchecked on 2026-10-20 after the
+receipt audit in
+[`docs/planning/DECISION_WINDOWS_RECEIPTS_2026-10-20.md`](docs/planning/DECISION_WINDOWS_RECEIPTS_2026-10-20.md);
+binary provenance states are tracked in
+[`bin/PROVENANCE.md`](bin/PROVENANCE.md).
+
 ### Notes
-- If you install this package using `git clone`, then all binary packages will be included. 
-  This is not the case when using `pip install` as only the binary for the given system is 
-  included; this allows for managing the various binaries easy through git versioning.
-- Please also keep in mind, unless you are planning on bundling this module with your own
-  custom package, or want to contribute to the project there is little other reason to use 
-  git to install it, because your python environement will not be able to locate it and 
-  pathing will not be inherited.
+- The PyPI wheel ships no binaries. On the default (safe) runtime, the
+  matching 7-Zip artifact is downloaded into a cache directory
+  (`~/.cache/py7zip` by default) and its sha256 is verified against
+  pinned digests before use; acquisition is explicit via
+  `download_binary()` or the first archive operation.
+- A `git clone` of this repository includes the `bin/` tree itself
+  (see [`bin/INFO.md`](bin/INFO.md) and
+  [`bin/PROVENANCE.md`](bin/PROVENANCE.md)); the placeholder slots in
+  that tree are empty files and are not distributed.
